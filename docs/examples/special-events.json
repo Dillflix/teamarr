@@ -1,0 +1,62 @@
+{
+  "special_events": {
+    "competitions": [
+      {"id": "winter-olympics", "name": "Winter Olympics"},
+      {"id": "olympic-hockey", "name": "Olympic Hockey", "sports": ["hockey"]},
+      {"id": "four-nations-face-off", "name": "4 Nations Face-Off", "sports": ["hockey"]}
+    ],
+    "editions": [
+      {
+        "id": "demo-winter-games", "competition_id": "winter-olympics",
+        "name": "Fictional winter games example",
+        "start_date": "2030-02-01", "end_date": "2030-02-28", "timezone": "Europe/Paris"
+      },
+      {
+        "id": "demo-womens-hockey", "competition_id": "olympic-hockey",
+        "name": "Fictional women's hockey example", "parent_edition_id": "demo-winter-games",
+        "start_date": "2030-02-01", "end_date": "2030-02-28", "timezone": "Europe/Paris"
+      },
+      {
+        "id": "demo-four-nations", "competition_id": "four-nations-face-off",
+        "name": "Fictional 4 Nations example; not a confirmed edition",
+        "start_date": "2030-02-01", "end_date": "2030-02-28", "timezone": "America/New_York"
+      }
+    ],
+    "sessions": [
+      {
+        "provider": "configured", "id": "hockey-final", "edition_id": "demo-womens-hockey",
+        "title": "Example women's hockey final - participants pending",
+        "sport": "hockey", "category": "women", "stage": "final", "medal_event": true,
+        "countries": null, "start_time": "2030-02-10T13:00:00+01:00"
+      },
+      {
+        "provider": "configured", "id": "downhill", "edition_id": "demo-winter-games",
+        "title": "Example downhill race", "kind": "race", "sport": "skiing",
+        "discipline": "alpine-skiing", "category": "women", "stage": "final",
+        "medal_event": true, "countries": ["CAN", "FRA"],
+        "participants": ["Example athlete A", "Example athlete B"],
+        "start_time": "2030-02-10T11:00:00+01:00"
+      },
+      {
+        "provider": "configured", "id": "canada-finland", "edition_id": "demo-four-nations",
+        "title": "Example Canada-Finland game", "sport": "hockey", "category": "men",
+        "stage": "round-robin", "countries": ["CAN", "FIN"],
+        "participants": ["Canada", "Finland"], "medal_event": false,
+        "start_time": "2030-02-10T19:00:00-05:00"
+      }
+    ],
+    "rules": [
+      {
+        "id": "canada-hockey-medals", "edition_ids": ["demo-winter-games"],
+        "sports": ["hockey"], "countries": ["CAN"], "medal_event": true
+      },
+      {
+        "id": "all-four-nations", "edition_ids": ["demo-four-nations"], "kinds": ["game"]
+      },
+      {
+        "id": "follow-athlete", "edition_ids": ["demo-winter-games"],
+        "sports": ["skiing"], "participants": ["Example athlete A"]
+      }
+    ]
+  }
+}

@@ -32,6 +32,7 @@ from teamarr.api.routes import (
     race_feeds,
     settings,
     sort_priorities,
+    special_events,
     stats,
     subscription,
     support,
@@ -387,6 +388,7 @@ def create_app() -> FastAPI:
     app.include_router(epg.router, prefix="/api/v1", tags=["EPG"])
     app.include_router(broadcast_sessions.router, prefix="/api/v1", tags=["Broadcast Sessions"])
     app.include_router(golf.router, prefix="/api/v1", tags=["Golf"])
+    app.include_router(special_events.router, prefix="/api/v1", tags=["Special Events"])
     app.include_router(keywords.router, prefix="/api/v1/keywords", tags=["Exception Keywords"])
     app.include_router(race_feeds.router, prefix="/api/v1/race-feeds", tags=["Race Feeds"])
     app.include_router(cache.router, prefix="/api/v1", tags=["Cache"])

@@ -6,6 +6,10 @@ NHL, MLB and NBA through Teamarr's existing providers, plus an NFL RedZone
 broadcast-session source. This increment adds the RedZone source and its API;
 it does not change the existing league/event APIs or add Fire TV control.
 
+Later additions are documented in [golf sessions](golf-sessions.md) and
+[special competitions and multi-sport editions](special-events.md). Their
+configuration sections coexist with RedZone in `TEAMARR_BROADCAST_CONFIG`.
+
 ## RedZone API
 
 ```http
