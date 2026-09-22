@@ -65,7 +65,8 @@ return `[]`, retaining upstream schedule behavior.
 `BroadcastSession` is separate from Teamarr's matchup-oriented `Event` model.
 Its `BroadcastSessionSource` interface supports future sources for golf rounds,
 fight cards, Olympic sessions and other coverage windows without forcing them
-into home/away teams. This release registers only `nfl_redzone` at the API.
+into home/away teams. The API registers `nfl_redzone` and `golf`; see
+[golf sessions](golf-sessions.md) for tournament discovery and coverage configuration.
 Existing XMLTV generation and frontend screens do not yet consume these
 sessions; clients access the new endpoint directly.
 

@@ -3,6 +3,12 @@
 from functools import lru_cache
 
 from teamarr.services import SportsDataService, create_default_service
+from teamarr.services.golf import GolfCatalogService
+
+
+@lru_cache
+def get_golf_catalog() -> GolfCatalogService:
+    return GolfCatalogService()
 
 
 @lru_cache

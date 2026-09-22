@@ -22,10 +22,14 @@ class BroadcastSession:
     session_date: date
     timezone: str
     start_time: datetime
-    expected_end_time: datetime
+    expected_end_time: datetime | None
     timing_basis: str
     related_events: tuple[EventReference, ...] = ()
     end_time_estimated: bool = True
+    parent_event: EventReference | None = None
+    segment: str | None = None
+    coverage_type: str | None = None
+    playback_target: str | None = None
 
 
 class BroadcastSessionSource(Protocol):

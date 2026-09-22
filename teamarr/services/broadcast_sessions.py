@@ -14,6 +14,7 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from teamarr.core.broadcast import BroadcastSession, EventReference
 from teamarr.core.types import SEASON_REGULAR, Event
+from teamarr.services.golf_sessions import GolfConfig
 
 REDZONE_TIMEZONE = "America/New_York"
 
@@ -55,6 +56,7 @@ class BroadcastConfig(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     redzone: RedZoneConfig = Field(default_factory=RedZoneConfig)
+    golf: GolfConfig = Field(default_factory=GolfConfig)
 
 
 def load_broadcast_config() -> BroadcastConfig:
