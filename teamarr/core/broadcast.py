@@ -30,6 +30,8 @@ class BroadcastSession:
     segment: str | None = None
     coverage_type: str | None = None
     playback_target: str | None = None
+    channel: str | None = None
+    listing_url: str | None = None
 
 
 class BroadcastSessionSource(Protocol):

@@ -1,7 +1,6 @@
 """Explicit golf coverage windows attached to provider tournament identities.
 
-The initial source is configuration. A future broadcast-listing importer can
-produce the same windows without changing session consumers or the controller.
+Both configuration and broadcaster-listing importers produce these windows.
 """
 
 from datetime import UTC, date
@@ -31,6 +30,10 @@ class GolfCoverageWindow(BaseModel):
     timezone: str = "America/New_York"
     enabled: bool = True
     playback_target: str | None = Field(default=None, min_length=1)
+    segment: str | None = None
+    channel: str | None = None
+    listing_url: str | None = None
+    timing_basis: Literal["configured", "listing"] = "configured"
 
     @field_validator("timezone")
     @classmethod
@@ -56,6 +59,10 @@ class GolfConfig(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     enabled: bool = True
+    allowed_apps: list[Literal["tsn", "sportsnet"]] = Field(
+        default_factory=lambda: ["tsn", "sportsnet"]
+    )
+    import_tsn_schedule: bool = True
     playback_target: str | None = Field(default=None, min_length=1)
     coverage: list[GolfCoverageWindow] = Field(default_factory=list)
 
@@ -78,6 +85,9 @@ class GolfSessionSource:
         for window in self._config.coverage:
             if not window.enabled:
                 continue
+            target = window.playback_target or self._config.playback_target
+            if target is not None and target not in self._config.allowed_apps:
+                continue
             session_date = window.start_time.astimezone(ZoneInfo(window.timezone)).date()
             if session_date != target_date:
                 continue
@@ -99,13 +109,16 @@ class GolfSessionSource:
                     timezone=window.timezone,
                     start_time=window.start_time.astimezone(UTC),
                     expected_end_time=window.end_time.astimezone(UTC) if window.end_time else None,
-                    timing_basis="configured",
+                    timing_basis=window.timing_basis,
                     related_events=(parent,),
                     end_time_estimated=window.end_time_estimated if window.end_time else True,
                     parent_event=parent,
-                    segment=f"round_{window.round_number}" if window.round_number else None,
+                    segment=window.segment
+                    or (f"round_{window.round_number}" if window.round_number else None),
                     coverage_type=window.coverage_type,
-                    playback_target=window.playback_target or self._config.playback_target,
+                    playback_target=target,
+                    channel=window.channel,
+                    listing_url=window.listing_url,
                 )
             )
         return sorted(sessions, key=lambda session: (session.start_time, session.id))

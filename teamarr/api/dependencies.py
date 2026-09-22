@@ -4,6 +4,12 @@ from functools import lru_cache
 
 from teamarr.services import SportsDataService, create_default_service
 from teamarr.services.golf import GolfCatalogService
+from teamarr.services.tsn_golf import TSNGolfScheduleService
+
+
+@lru_cache
+def get_tsn_golf_schedule() -> TSNGolfScheduleService:
+    return TSNGolfScheduleService(get_golf_catalog())
 
 
 @lru_cache

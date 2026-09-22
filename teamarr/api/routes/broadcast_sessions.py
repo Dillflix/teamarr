@@ -7,12 +7,12 @@ from typing import Literal
 from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import ValidationError
 
-from teamarr.api.dependencies import get_sports_service
+from teamarr.api.dependencies import get_sports_service, get_tsn_golf_schedule
 from teamarr.config import get_user_timezone
 from teamarr.core.broadcast import BroadcastSession
 from teamarr.services.broadcast_sessions import RedZoneSource, load_broadcast_config
-from teamarr.services.golf_sessions import GolfSessionSource
 from teamarr.services.sports_data import SportsDataService
+from teamarr.services.tsn_golf import TSNGolfScheduleService, get_golf_sessions
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
@@ -25,6 +25,7 @@ def get_broadcast_sessions(
     ),
     source: Literal["nfl_redzone", "golf"] = "nfl_redzone",
     service: SportsDataService = Depends(get_sports_service),
+    tsn: TSNGolfScheduleService = Depends(get_tsn_golf_schedule),
 ) -> list[BroadcastSession]:
     """Enumerate planning sessions; does not start or stop device playback."""
     try:
@@ -34,7 +35,7 @@ def get_broadcast_sessions(
         raise HTTPException(status_code=503, detail="Invalid broadcast configuration") from exc
 
     if source == "golf":
-        return GolfSessionSource(config.golf).get_sessions(target_date)
+        return get_golf_sessions(target_date, config.golf, tsn)
     return RedZoneSource(service.get_events, get_user_timezone(), config.redzone).get_sessions(
         target_date
     )

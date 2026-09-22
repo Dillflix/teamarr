@@ -8,7 +8,7 @@ import pytest
 from fastapi.testclient import TestClient
 
 from teamarr.api.app import create_app
-from teamarr.api.dependencies import get_golf_catalog, get_sports_service
+from teamarr.api.dependencies import get_golf_catalog, get_sports_service, get_tsn_golf_schedule
 from teamarr.providers.espn.golf import parse_golf_tournaments
 from teamarr.services.golf import GolfCatalogService
 from teamarr.services.golf_sessions import GolfConfig, GolfSessionSource
@@ -120,12 +120,12 @@ def test_multiple_windows_for_one_round_and_routing_override():
     second = window(
         key="round4-main-late",
         start_time="2026-09-20T15:00:00-04:00",
-        playback_target="alternate_app",
+        playback_target="sportsnet",
     )
-    result = sessions([second, first], playback_target="golf_app")
+    result = sessions([second, first], playback_target="tsn")
     assert len(result) == 2
-    assert result[0].playback_target == "golf_app"
-    assert result[1].playback_target == "alternate_app"
+    assert result[0].playback_target == "tsn"
+    assert result[1].playback_target == "sportsnet"
     assert result[0].end_time_estimated is False
     assert result[0].expected_end_time == result[1].start_time
 
@@ -212,6 +212,9 @@ def test_api_discovery_configuration_reload_and_backwards_compatibility(
     config = GolfConfig(coverage=[window()])
     path.write_text('{"golf":' + config.model_dump_json() + "}")
     app = create_app()
+    app.dependency_overrides[get_tsn_golf_schedule] = lambda: SimpleNamespace(
+        get_windows=lambda day: []
+    )
     app.dependency_overrides[get_sports_service] = lambda: SimpleNamespace(
         get_events=lambda league, day: []
     )
