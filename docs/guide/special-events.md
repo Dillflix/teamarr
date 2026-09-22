@@ -155,21 +155,22 @@ Olympic hockey is not automatically routed through the user's NHL app. The
 TSN/Sportsnet restriction remains golf-specific; Olympic routing can later include
 CBC Gem according to listings and installed apps.
 
-The next broadcaster adapter should link listings by edition and provider event
-identity, support several feeds for one contest and several contests per feed,
-and distinguish dedicated live coverage, mixed coverage, ceremonies and replays.
-Mixed coverage alone cannot establish that a requested final will be shown.
-This increment does not expose a special-events broadcast source or turn matches
-into playback jobs. Existing RedZone/golf broadcast endpoints remain available.
+The [special-event coverage integration](special-event-coverage.md) now links
+configured listings by edition and provider event identity. It supports several
+feeds per contest and several contests per feed, and distinguishes dedicated live
+coverage, mixed coverage and replays. Ceremonies use their own scheduled-session
+references. Mixed coverage alone cannot establish that a final will be shown.
+The broadcast source and viewing-options endpoint produce planning data, not
+playback jobs. Existing RedZone/golf endpoints remain available.
 
 A later controller consumes matched sessions and verified broadcast options,
 checks entitlement, and arbitrates overlaps on one Fire TV. Priority, interruption
 permission and queues belong there; this read-only endpoint does not infer them
 or poll automatically.
 
-Full Olympic ingestion, automatic 4 Nations discovery, athlete IDs, broadcaster
-joins, natural-language rule authoring, UI and device control remain integration
-work. Imports inherit Teamarr's coverage and refresh behavior. General fetch-health
+Full Olympic ingestion, automatic 4 Nations discovery, athlete IDs, automatic
+broadcast-listing ingestion, natural-language rule authoring, UI and device control
+remain integration work. Imports inherit Teamarr's coverage and refresh behavior. General fetch-health
 reporting and playoff TBD handling remain deferred as agreed.
 
 ## Validation

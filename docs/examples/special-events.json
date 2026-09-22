@@ -45,6 +45,40 @@
         "start_time": "2030-02-10T19:00:00-05:00"
       }
     ],
+    "coverage": {
+      "preferred_apps": ["cbc_gem", "tsn", "sportsnet"],
+      "windows": [
+        {
+          "id": "demo-hockey-main", "edition_id": "demo-winter-games",
+          "title": "Fictional dedicated hockey coverage",
+          "start_time": "2030-02-10T12:30:00+01:00",
+          "end_time": "2030-02-10T16:00:00+01:00", "timezone": "Europe/Paris",
+          "app": "cbc_gem", "stream_title": "Example women's hockey final",
+          "sports": ["hockey"],
+          "related_sessions": [
+            {"edition_id": "demo-womens-hockey", "provider": "configured", "id": "hockey-final"}
+          ]
+        },
+        {
+          "id": "demo-mixed-coverage", "edition_id": "demo-winter-games",
+          "title": "Fictional mixed Olympic coverage",
+          "coverage_type": "multi_event", "sports": ["hockey", "skiing"],
+          "start_time": "2030-02-10T10:00:00+01:00",
+          "end_time": "2030-02-10T18:00:00+01:00", "timezone": "Europe/Paris",
+          "app": "tsn", "channel": "Example channel"
+        },
+        {
+          "id": "demo-hockey-replay", "edition_id": "demo-winter-games",
+          "title": "Fictional hockey replay", "presentation": "replay",
+          "start_time": "2030-02-10T20:00:00+01:00",
+          "end_time": "2030-02-10T23:00:00+01:00", "timezone": "Europe/Paris",
+          "app": "sportsnet", "stream_title": "Example replay", "sports": ["hockey"],
+          "related_sessions": [
+            {"edition_id": "demo-womens-hockey", "provider": "configured", "id": "hockey-final"}
+          ]
+        }
+      ]
+    },
     "rules": [
       {
         "id": "canada-hockey-medals", "edition_ids": ["demo-winter-games"],

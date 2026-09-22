@@ -4,6 +4,8 @@ from dataclasses import dataclass
 from datetime import date, datetime
 from typing import Protocol
 
+from teamarr.core.special_coverage import ScheduledSessionReference
+
 
 @dataclass(frozen=True)
 class EventReference:
@@ -17,7 +19,7 @@ class BroadcastSession:
     source: str
     title: str
     kind: str
-    sport: str
+    sport: str | None
     competition: str
     session_date: date
     timezone: str
@@ -32,6 +34,11 @@ class BroadcastSession:
     playback_target: str | None = None
     channel: str | None = None
     listing_url: str | None = None
+    edition_id: str | None = None
+    sports: tuple[str, ...] = ()
+    related_sessions: tuple[ScheduledSessionReference, ...] = ()
+    presentation: str | None = None
+    stream_title: str | None = None
 
 
 class BroadcastSessionSource(Protocol):

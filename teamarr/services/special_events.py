@@ -11,6 +11,7 @@ from zoneinfo import ZoneInfo
 
 from pydantic import Field, model_validator
 
+from teamarr.core.special_coverage import SpecialCoverageConfig
 from teamarr.core.special_events import (
     CatalogModel,
     Competition,
@@ -43,6 +44,7 @@ class SpecialEventsConfig(CatalogModel):
     imports: tuple[TeamarrLeagueImport, ...] = ()
     sessions: tuple[ScheduledSession, ...] = ()
     rules: tuple[ViewingRule, ...] = ()
+    coverage: SpecialCoverageConfig = Field(default_factory=SpecialCoverageConfig)
 
     @model_validator(mode="after")
     def valid_catalog(self) -> Self:
@@ -81,6 +83,17 @@ class SpecialEventsConfig(CatalogModel):
                 raise ValueError(f"Unknown edition in rule: {rule.id}")
             if set(rule.competition_ids) - competitions.keys():
                 raise ValueError(f"Unknown competition in rule: {rule.id}")
+        for window in self.coverage.windows:
+            if window.edition_id not in editions:
+                raise ValueError(f"Unknown broadcast edition: {window.edition_id}")
+            for reference in window.related_sessions:
+                if reference.edition_id not in editions:
+                    raise ValueError(f"Unknown referenced edition: {reference.edition_id}")
+                current = editions[reference.edition_id]
+                while current.id != window.edition_id and current.parent_edition_id is not None:
+                    current = editions[current.parent_edition_id]
+                if current.id != window.edition_id:
+                    raise ValueError("Broadcast reference is outside its edition scope")
         return self
 
 

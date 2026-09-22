@@ -11,6 +11,7 @@ from teamarr.api.dependencies import get_sports_service, get_tsn_golf_schedule
 from teamarr.config import get_user_timezone
 from teamarr.core.broadcast import BroadcastSession
 from teamarr.services.broadcast_sessions import RedZoneSource, load_broadcast_config
+from teamarr.services.special_coverage import SpecialCoverageSource
 from teamarr.services.sports_data import SportsDataService
 from teamarr.services.tsn_golf import TSNGolfScheduleService, get_golf_sessions
 
@@ -23,7 +24,7 @@ def get_broadcast_sessions(
     target_date: date = Query(
         description="Session start date in its timezone (Eastern for RedZone)"
     ),
-    source: Literal["nfl_redzone", "golf"] = "nfl_redzone",
+    source: Literal["nfl_redzone", "golf", "special_events"] = "nfl_redzone",
     service: SportsDataService = Depends(get_sports_service),
     tsn: TSNGolfScheduleService = Depends(get_tsn_golf_schedule),
 ) -> list[BroadcastSession]:
@@ -36,6 +37,8 @@ def get_broadcast_sessions(
 
     if source == "golf":
         return get_golf_sessions(target_date, config.golf, tsn)
+    if source == "special_events":
+        return SpecialCoverageSource(config.special_events).get_sessions(target_date)
     return RedZoneSource(service.get_events, get_user_timezone(), config.redzone).get_sessions(
         target_date
     )

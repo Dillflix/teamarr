@@ -14,6 +14,7 @@ from teamarr.core.special_events import (
     SessionSelection,
 )
 from teamarr.services.broadcast_sessions import load_broadcast_config
+from teamarr.services.special_coverage import SpecialCoverageSource, ViewingOptions
 from teamarr.services.special_events import SpecialEventsCatalog
 from teamarr.services.sports_data import SportsDataService
 
@@ -71,4 +72,16 @@ def get_selections(
         catalog.select(session, rule)
         for session in catalog.get_sessions(target_date)
         for rule in rules
+    ]
+
+
+@router.get("/viewing-options", response_model=list[ViewingOptions])
+def get_viewing_options(
+    target_date: date = Query(description="Sporting session start date in its edition's timezone"),
+    rule_id: str | None = None,
+    catalog: SpecialEventsCatalog = Depends(get_special_catalog),
+) -> list[ViewingOptions]:
+    source = SpecialCoverageSource(catalog.config)
+    return [
+        source.get_options(selection) for selection in get_selections(target_date, rule_id, catalog)
     ]
