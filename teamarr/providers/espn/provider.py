@@ -693,6 +693,8 @@ class ESPNProvider(MMAParserMixin, TennisParserMixin, TournamentParserMixin, Spo
             sport=sport,
             logo_url=logo_url,
             color=team_data.get("color"),
+            city=team_data.get("location") or None,
+            nickname=team_data.get("name") or None,
         )
 
     def _extract_logo(self, data: dict) -> str | None:
@@ -996,6 +998,8 @@ class ESPNProvider(MMAParserMixin, TennisParserMixin, TournamentParserMixin, Spo
             sport=sport,
             logo_url=self._extract_logo(team_data),
             color=team_data.get("color"),
+            city=team_data.get("location") or None,
+            nickname=team_data.get("name") or None,
         )
 
     def _parse_status(self, status_data: dict) -> EventStatus:
@@ -1284,6 +1288,8 @@ class ESPNProvider(MMAParserMixin, TennisParserMixin, TournamentParserMixin, Spo
             sport=sport,
             logo_url=logo_url,
             color=team_data.get("color"),
+            city=team_data.get("location") or None,
+            nickname=team_data.get("name") or None,
         )
 
     def get_supported_leagues(self) -> list[str]:

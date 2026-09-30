@@ -84,6 +84,9 @@ class Team:
     color: str | None = None
     # Combat sports: fighter record (e.g., "8-1-0" for W-L-D)
     record_summary: str | None = None
+    # Provider-supplied identity components; never split the display name.
+    city: str | None = None  # Location label (may be a region, state or school)
+    nickname: str | None = None
 
 
 @dataclass(frozen=True)

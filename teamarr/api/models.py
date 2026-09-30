@@ -529,8 +529,21 @@ class MatchCorrectionResponse(BaseModel):
     new_event_id: str | None = None
 
 
+class EventTeamDetails(BaseModel):
+    """Provider identity; name is the nickname, full_name is the display name."""
+
+    id: str
+    provider: str
+    full_name: str
+    city: str | None = Field(None, description="Provider location, not necessarily a city")
+    name: str | None = Field(None, description="Provider nickname; never inferred from full_name")
+    short_name: str
+    abbreviation: str
+    logo_url: str | None = None
+
+
 class EventSearchResult(BaseModel):
-    """Event search result for correction UI."""
+    """Event search result for correction UI and external controllers."""
 
     event_id: str
     event_name: str
@@ -539,7 +552,17 @@ class EventSearchResult(BaseModel):
     start_time: str
     home_team: str | None = None
     away_team: str | None = None
+    home_team_details: EventTeamDetails | None = None
+    away_team_details: EventTeamDetails | None = None
     status: str | None = None
+
+
+class EventSearchResponse(BaseModel):
+    """Date-scoped event search with backward-compatible display names."""
+
+    count: int
+    target_date: str
+    events: list[EventSearchResult]
 
 
 class GameDataCacheStats(BaseModel):

@@ -135,6 +135,8 @@ def team_to_dict(team: Team) -> dict:
         "sport": team.sport,
         "logo_url": team.logo_url,
         "color": team.color,
+        "city": team.city,
+        "nickname": team.nickname,
     }
 
 
@@ -262,6 +264,8 @@ def dict_to_team(data: dict) -> Team:
         sport=data["sport"],
         logo_url=data.get("logo_url"),
         color=data.get("color"),
+        city=data.get("city"),
+        nickname=data.get("nickname"),
     )
 
 

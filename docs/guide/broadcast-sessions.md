@@ -10,6 +10,9 @@ Later additions are documented in [golf sessions](golf-sessions.md) and
 [special competitions and multi-sport editions](special-events.md). Their
 configuration sections coexist with RedZone in `TEAMARR_BROADCAST_CONFIG`.
 
+For league games and structured team identities, see the
+[event search API](event-search.md).
+
 ## RedZone API
 
 ```http

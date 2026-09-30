@@ -13,7 +13,9 @@ from teamarr.api.dependencies import get_sports_service
 from teamarr.api.models import (
     EPGGenerateRequest,
     EPGGenerateResponse,
+    EventSearchResponse,
     EventSearchResult,
+    EventTeamDetails,
     GameDataCacheClearResponse,
     GameDataCacheStats,
     MatchCorrectionRequest,
@@ -36,6 +38,7 @@ from teamarr.consumers.stream_match_cache import (
     compute_fingerprint,
     event_to_cache_data,
 )
+from teamarr.core import Team
 from teamarr.database import get_db
 from teamarr.database.channels.crud import count_active_managed_channels
 from teamarr.database.leagues import get_all_leagues
@@ -840,7 +843,22 @@ def remove_stream_correction(
     }
 
 
-@router.get("/epg/events/search")
+def _event_team_details(team: Team | None) -> EventTeamDetails | None:
+    if team is None:
+        return None
+    return EventTeamDetails(
+        id=team.id,
+        provider=team.provider,
+        full_name=team.name,
+        city=team.city,
+        name=team.nickname,
+        short_name=team.short_name,
+        abbreviation=team.abbreviation,
+        logo_url=team.logo_url,
+    )
+
+
+@router.get("/epg/events/search", response_model=EventSearchResponse)
 def search_events(
     league: str | None = Query(None, description="Filter by league code"),
     team: str | None = Query(None, description="Search by team name"),
@@ -848,10 +866,12 @@ def search_events(
     limit: int = Query(50, ge=1, le=200, description="Max results"),
     service: SportsDataService = Depends(get_sports_service),
 ):
-    """Search events for manual match correction UI.
+    """Search events for manual match correction and external controllers.
 
     Returns events matching the search criteria. Use this to find the
     correct event when manually correcting a failed or incorrect match.
+    Team details include provider-supplied location and nickname when available;
+    existing home_team/away_team display-name strings remain unchanged.
     """
 
     target = _parse_date(target_date) if target_date else date.today()
@@ -894,6 +914,8 @@ def search_events(
                     start_time=event.start_time.isoformat(),
                     home_team=event.home_team.name if event.home_team else None,
                     away_team=event.away_team.name if event.away_team else None,
+                    home_team_details=_event_team_details(event.home_team),
+                    away_team_details=_event_team_details(event.away_team),
                     status=event.status.state if event.status else None,
                 )
             )

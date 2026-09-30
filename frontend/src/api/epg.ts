@@ -273,6 +273,17 @@ export async function getFailedMatches(
 }
 
 // Event search for manual match correction
+export interface EventTeamDetails {
+  id: string
+  provider: string
+  full_name: string
+  city: string | null
+  name: string | null // Provider nickname, not the full display name
+  short_name: string
+  abbreviation: string
+  logo_url: string | null
+}
+
 export interface EventSearchResult {
   event_id: string
   event_name: string
@@ -281,6 +292,8 @@ export interface EventSearchResult {
   start_time: string
   home_team: string | null
   away_team: string | null
+  home_team_details: EventTeamDetails | null
+  away_team_details: EventTeamDetails | null
   status: string | null
 }
 
