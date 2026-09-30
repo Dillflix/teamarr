@@ -21,6 +21,7 @@ from teamarr.database.provider_cache import (
 )
 from teamarr.database.settings.types import AllSettings
 from teamarr.providers.espn.provider import ESPNProvider
+from teamarr.services.event_details import event_end_estimate
 
 
 @pytest.fixture
@@ -207,7 +208,7 @@ def test_duration_settings_changes_and_default_fallback(api, monkeypatch, event)
     (datetime(2026, 10, 4, 17), "2026-10-04T20:30:00+00:00"),
 ])
 def test_end_estimate_handles_midnight_dst_and_legacy_naive_times(event, start, expected):
-    assert epg._event_end_estimate(replace(event, start_time=start), {"football": 3.5}, 3) == (
+    assert event_end_estimate(replace(event, start_time=start), {"football": 3.5}, 3) == (
         expected, "sport_duration",
     )
 

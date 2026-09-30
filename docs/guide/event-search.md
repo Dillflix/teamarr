@@ -89,3 +89,15 @@ by substring, `limit` defaults to 50 and is capped at 200, and `target_date`
 defaults to the server's current date. Provider statuses are cached, so this
 is not a real-time playback confirmation API. RedZone and other broadcast
 sessions remain on their separate APIs.
+
+## Additional controller metadata
+
+Event search also returns provider and sport, short display name, status detail,
+period/clock, scores, broadcaster names and feed markets, season/week/event notes,
+series summary, venue/neutral-site context, tournament/round metadata, and MMA
+segment times/bouts when present. `artwork` contains resolved league/team/matchup
+logos and a cover URL using the configured game-thumbs integration. These fields
+add no per-event network requests.
+
+For time-window queries across games and coverage, chronological pagination and
+linked viewing options, use the [unified controller feed](controller-feed.md).

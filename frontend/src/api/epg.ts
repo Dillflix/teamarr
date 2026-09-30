@@ -284,20 +284,54 @@ export interface EventTeamDetails {
   logo_url: string | null
 }
 
+export interface EventArtwork {
+  league_logo_url: string | null
+  home_team_logo_url: string | null
+  away_team_logo_url: string | null
+  matchup_logo_url: string | null
+  cover_url: string | null
+}
+
 export interface EventSearchResult {
   event_id: string
   event_name: string
+  provider: string | null
+  sport: string | null
+  short_name: string | null
   league: string
   league_name: string | null
   start_time: string
   expected_end_time: string | null
   end_time_estimated: boolean | null
-  timing_basis: "sport_duration" | "default_duration" | null
+  timing_basis: "sport_duration" | "default_duration" | "configured" | null
   home_team: string | null
   away_team: string | null
   home_team_details: EventTeamDetails | null
   away_team_details: EventTeamDetails | null
   status: string | null
+  status_detail: string | null
+  period: number | null
+  clock: string | null
+  home_score: number | null
+  away_score: number | null
+  broadcasts: string[]
+  broadcast_markets: Record<string, string>
+  season_year: number | null
+  season_type: string | null
+  week: number | null
+  event_note: string | null
+  series_summary: string | null
+  venue: { name: string; city: string | null; state: string | null; country: string | null } | null
+  neutral_site: boolean
+  tournament_id: string | null
+  tournament_name: string | null
+  round_name: string | null
+  draw_type: string | null
+  is_major: boolean
+  main_card_start: string | null
+  segment_times: Record<string, string>
+  bouts: { fighter1: string; fighter2: string; segment: string; order: number }[]
+  artwork: EventArtwork
 }
 
 export interface EventSearchResponse {

@@ -18,6 +18,7 @@ from teamarr.api.routes import (
     broadcast_sessions,
     cache,
     channels,
+    controller_feed,
     detection_keywords,
     dispatcharr,
     epg,
@@ -386,6 +387,7 @@ def create_app() -> FastAPI:
     app.include_router(groups.router, prefix="/api/v1/groups", tags=["Event Groups"])
     app.include_router(aliases.router, prefix="/api/v1", tags=["Team Aliases"])
     app.include_router(epg.router, prefix="/api/v1", tags=["EPG"])
+    app.include_router(controller_feed.router, prefix="/api/v1", tags=["Controller Feed"])
     app.include_router(broadcast_sessions.router, prefix="/api/v1", tags=["Broadcast Sessions"])
     app.include_router(golf.router, prefix="/api/v1", tags=["Golf"])
     app.include_router(special_events.router, prefix="/api/v1", tags=["Special Events"])

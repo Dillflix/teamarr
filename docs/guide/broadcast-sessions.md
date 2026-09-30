@@ -90,3 +90,9 @@ Distinguishing failed schedule fetches from genuinely empty days is also
 future scope shared with upstream Teamarr. This source inherits its cache and
 empty-result behavior; it does not claim independent source-health reporting
 or retain a last-known RedZone session when upstream returns an empty list.
+
+## Unified controller feed
+
+The [controller feed](controller-feed.md) combines these sources with league games
+and special-event sessions, while retaining separate event/broadcast identities
+and explicit viewing options. Existing source-specific endpoints remain available.
