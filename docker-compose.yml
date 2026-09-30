@@ -1,6 +1,10 @@
 services:
   teamarr:
-    image: ghcr.io/pharaoh-labs/teamarr:latest
+    # Build the Dillflix fork from this checkout, including local source updates.
+    image: dillflix-teamarr:local
+    pull_policy: build
+    build:
+      context: .
     container_name: teamarr
     restart: unless-stopped
     ports:

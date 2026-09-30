@@ -16,14 +16,26 @@ Docker Compose is the recommended method for installation.
 
 ## Docker
 
-**Image tags:**
-- `latest` — Stable release (recommended)
-- `dev` — Development branch, may contain experimental features
+For the Dillflix fork, clone the repository and build the application locally:
+
+```bash
+git clone https://github.com/Dillflix/teamarr.git
+cd teamarr
+docker compose up -d --build teamarr
+```
+
+The repository includes the Compose configuration below. No override file is
+required. Run Compose from the checkout so the Dockerfile and application source
+are available. `pull_policy: build` builds the local image rather than downloading
+an upstream Teamarr image. Base images and build dependencies may still download.
 
 ```yaml
 services:
   teamarr:
-    image: ghcr.io/pharaoh-labs/teamarr:latest
+    image: dillflix-teamarr:local
+    pull_policy: build
+    build:
+      context: .
     container_name: teamarr
     restart: unless-stopped
     ports:
@@ -90,12 +102,19 @@ The navigation bar numbers the setup flow (first-run guidance — each number di
 
 ## Updating
 
-Pull the latest image and recreate the container:
+Pull the latest fork source, rebuild the local image and recreate the container:
 
 ```bash
-docker compose pull teamarr
-docker compose up -d teamarr
+git pull --ff-only
+docker compose up -d --build teamarr
+docker compose logs -f --tail=100 teamarr
 ```
+
+Keep the existing data directory and any custom environment settings or mounts.
+An existing Compose override is still applied; retain needed customizations and
+remove any upstream image/pull-policy override that conflicts with this local build.
+Do not use `docker compose pull` to update the fork: published upstream Teamarr images
+do not contain the Dillflix changes.
 
 Teamarr handles database migrations automatically — no manual steps needed between versions. When an update is available, the version badge in the nav bar gains an amber dot (update checks are configurable under Settings → General → Update Notifications).
 

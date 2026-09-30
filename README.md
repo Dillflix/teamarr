@@ -4,32 +4,39 @@
 
 <p align="center"><strong>Sports Channel Management for <a href="https://github.com/Dispatcharr/Dispatcharr">Dispatcharr</a></strong></p>
 
-## Quick Start
+## Quick Start — Dillflix fork
 
-```yaml
-services:
-  teamarr:
-    image: ghcr.io/pharaoh-labs/teamarr:latest
-    container_name: teamarr
-    restart: unless-stopped
-    ports:
-      - 9195:9195
-    volumes:
-      - ./data:/app/data
-    environment:
-      - TZ=America/Detroit
-```
+Build and launch this fork from its source checkout:
 
 ```bash
-docker compose up -d
+git clone https://github.com/Dillflix/teamarr.git
+cd teamarr
+docker compose up -d --build teamarr
 ```
 
-## Image Tags
+Open `http://YOUR_SERVER_IP:9195`. The supplied Compose service builds
+`dillflix-teamarr:local` from this repository. No override file is needed.
+Docker may download the Python, Node and other build dependencies; it does not
+pull the upstream Teamarr application image.
 
-| Tag | Description |
-|-----|-------------|
-| `latest` | Stable release |
-| `dev` | Development builds |
+The existing `./data:/app/data` mount preserves your database, settings and logs.
+Keep any additional environment settings or mounts you use for
+`TEAMARR_BROADCAST_CONFIG`.
+
+For subsequent updates, run from the same checkout:
+
+```bash
+git pull --ff-only
+docker compose up -d --build teamarr
+docker compose logs -f --tail=100 teamarr
+```
+
+A plain `docker compose up -d` also builds the service because its pull policy is
+`build`; Docker reuses unchanged build layers. The upstream
+`ghcr.io/pharaoh-labs/teamarr` images do not contain this fork's changes.
+
+See the [fork installation guide](docs/guide/installation.md) and
+[unified controller feed](docs/guide/controller-feed.md) for deployment and API details.
 
 ## Documentation
 
