@@ -50,6 +50,40 @@ components `null`. A missing team returns a `null` details object. Old cache
 entries still load, with `null` components until their normal provider refresh;
 no database migration or global cache purge is required.
 
+## Estimated event end
+
+Each event also exposes a planning estimate:
+
+```json
+{
+  "start_time": "2026-10-04T17:00:00+00:00",
+  "expected_end_time": "2026-10-04T20:30:00+00:00",
+  "end_time_estimated": true,
+  "timing_basis": "sport_duration"
+}
+```
+
+The end is the event start plus the configured duration for its sport,
+using the same `get_sport_duration` lookup as Teamarr's EPG pipeline.
+`GET /api/v1/settings/durations` returns these settings in hours; the existing
+PUT endpoint updates them. Settings are read once per search request, so
+changes apply even when the event itself comes from cache.
+
+Default estimates are 3.5 hours for football/baseball and 3 hours for
+hockey/basketball. Unrecognized sports use the configured global default
+and return `timing_basis: "default_duration"`. End timestamps are in UTC;
+duration arithmetic accounts for midnight and daylight-saving transitions.
+Invalid durations (nonpositive, nonfinite, or overflowing) produce `null`
+for all three estimate fields instead of an unusable timestamp.
+
+This estimate is not a broadcaster's scheduled coverage window or an actual
+finish time. It does not incorporate per-channel template overrides, delays,
+overtime, or live progress, and it never changes the provider's `status`.
+Do not stop playback when the estimated time passes. Multi-day tournaments
+and multi-segment cards need session-specific coverage from the separate
+broadcast/session APIs; a sport-duration estimate does not describe their
+full coverage. No event filtering or cache expiry behavior changes here.
+
 The existing query behavior is unchanged: optional `team` filters full names
 by substring, `limit` defaults to 50 and is capped at 200, and `target_date`
 defaults to the server's current date. Provider statuses are cached, so this

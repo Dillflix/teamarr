@@ -290,6 +290,9 @@ export interface EventSearchResult {
   league: string
   league_name: string | null
   start_time: string
+  expected_end_time: string | null
+  end_time_estimated: boolean | null
+  timing_basis: "sport_duration" | "default_duration" | null
   home_team: string | null
   away_team: string | null
   home_team_details: EventTeamDetails | null

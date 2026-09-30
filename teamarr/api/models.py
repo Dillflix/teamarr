@@ -1,6 +1,7 @@
 """Pydantic models for API requests and responses."""
 
 from datetime import datetime
+from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -550,6 +551,9 @@ class EventSearchResult(BaseModel):
     league: str
     league_name: str | None = None
     start_time: str
+    expected_end_time: str | None = None
+    end_time_estimated: bool | None = None
+    timing_basis: Literal["sport_duration", "default_duration"] | None = None
     home_team: str | None = None
     away_team: str | None = None
     home_team_details: EventTeamDetails | None = None

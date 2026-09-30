@@ -2,9 +2,12 @@
 
 import json
 import logging
+import math
 import queue
 import threading
-from datetime import date, datetime
+from dataclasses import asdict
+from datetime import UTC, date, datetime, timedelta
+from typing import Literal
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from fastapi.responses import StreamingResponse
@@ -38,11 +41,11 @@ from teamarr.consumers.stream_match_cache import (
     compute_fingerprint,
     event_to_cache_data,
 )
-from teamarr.core import Team
+from teamarr.core import Event, Team
 from teamarr.database import get_db
 from teamarr.database.channels.crud import count_active_managed_channels
 from teamarr.database.leagues import get_all_leagues
-from teamarr.database.settings import get_dispatcharr_settings, get_epg_settings
+from teamarr.database.settings import get_all_settings, get_dispatcharr_settings, get_epg_settings
 from teamarr.database.stats import (
     get_epg_analysis_stats,
     get_match_stats_summary,
@@ -55,6 +58,7 @@ from teamarr.database.stats import (
 )
 from teamarr.dispatcharr import get_dispatcharr_connection
 from teamarr.services import SportsDataService
+from teamarr.utilities.sports import get_sport_duration
 
 logger = logging.getLogger(__name__)
 
@@ -858,6 +862,24 @@ def _event_team_details(team: Team | None) -> EventTeamDetails | None:
     )
 
 
+def _event_end_estimate(
+    event: Event, sport_durations: dict[str, float], default: float
+) -> tuple[str | None, Literal["sport_duration", "default_duration"] | None]:
+    """Planning estimate in UTC; never an observed finish or a status transition."""
+    hours = get_sport_duration(event.sport, sport_durations, default)
+    if not math.isfinite(hours) or hours <= 0:
+        return None, None
+    start = event.start_time
+    # Match Teamarr's treatment of naive timestamps in legacy provider data.
+    start_utc = start.replace(tzinfo=UTC) if start.tzinfo is None else start.astimezone(UTC)
+    try:
+        end = start_utc + timedelta(hours=hours)
+    except OverflowError:
+        return None, None
+    basis = "sport_duration" if event.sport.lower() in sport_durations else "default_duration"
+    return end.isoformat(), basis
+
+
 @router.get("/epg/events/search", response_model=EventSearchResponse)
 def search_events(
     league: str | None = Query(None, description="Filter by league code"),
@@ -872,6 +894,7 @@ def search_events(
     correct event when manually correcting a failed or incorrect match.
     Team details include provider-supplied location and nickname when available;
     existing home_team/away_team display-name strings remain unchanged.
+    Expected end times use configured sport durations, not observed finishes.
     """
 
     target = _parse_date(target_date) if target_date else date.today()
@@ -880,6 +903,8 @@ def search_events(
     # Get league info for display names
     with get_db() as conn:
         all_leagues = {lg["league_code"]: lg for lg in get_all_leagues(conn)}
+        sport_durations = asdict(get_all_settings(conn).durations)
+    default_duration = sport_durations.pop("default")
 
     # If league specified, search only that league
     if league:
@@ -905,6 +930,9 @@ def search_events(
                     continue
 
             lg_info = all_leagues.get(lg, {})
+            expected_end, timing_basis = _event_end_estimate(
+                event, sport_durations, default_duration
+            )
             results.append(
                 EventSearchResult(
                     event_id=event.id,
@@ -912,6 +940,9 @@ def search_events(
                     league=lg,
                     league_name=lg_info.get("display_name"),
                     start_time=event.start_time.isoformat(),
+                    expected_end_time=expected_end,
+                    end_time_estimated=True if expected_end is not None else None,
+                    timing_basis=timing_basis,
                     home_team=event.home_team.name if event.home_team else None,
                     away_team=event.away_team.name if event.away_team else None,
                     home_team_details=_event_team_details(event.home_team),

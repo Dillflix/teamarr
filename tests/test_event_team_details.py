@@ -4,6 +4,7 @@ from contextlib import nullcontext
 from dataclasses import replace
 from datetime import UTC, date, datetime
 from unittest.mock import Mock
+from zoneinfo import ZoneInfo
 
 import pytest
 from fastapi import FastAPI
@@ -18,6 +19,7 @@ from teamarr.database.provider_cache import (
     event_to_dict,
     team_to_dict,
 )
+from teamarr.database.settings.types import AllSettings
 from teamarr.providers.espn.provider import ESPNProvider
 
 
@@ -106,6 +108,7 @@ def api(monkeypatch, event):
     monkeypatch.setattr(epg, "get_all_leagues", lambda conn: [
         {"league_code": "nfl", "display_name": "NFL"},
     ])
+    monkeypatch.setattr(epg, "get_all_settings", lambda conn: AllSettings())
     service = Mock()
     service.get_events.return_value = [dict_to_event(event_to_dict(event))]
     app = FastAPI()
@@ -126,6 +129,9 @@ def test_search_http_contract_preserves_names_and_adds_details(api):
     assert event["home_team"] == "Detroit Lions"
     assert event["away_team"] == "Green Bay Packers"
     assert event["status"] == "scheduled"
+    assert event["expected_end_time"] == "2026-10-04T20:30:00+00:00"
+    assert event["end_time_estimated"] is True
+    assert event["timing_basis"] == "sport_duration"
     assert event["home_team_details"] == {
         "id": "8", "provider": "espn", "full_name": "Detroit Lions",
         "city": "Detroit", "name": "Lions", "short_name": "Lions",
@@ -160,3 +166,75 @@ def test_team_filter_and_empty_results_unchanged(api):
         "/api/v1/epg/events/search?league=nfl&target_date=2026-10-04&team=unmatched"
     )
     assert response.json() == {"count": 0, "target_date": "2026-10-04", "events": []}
+
+
+@pytest.mark.parametrize("sport,hours", [
+    ("football", 3.5), ("hockey", 3), ("baseball", 3.5), ("basketball", 3),
+])
+def test_end_estimate_uses_configured_sport_duration(api, event, sport, hours):
+    from datetime import timedelta
+
+    client, service = api
+    service.get_events.return_value = [replace(event, sport=sport)]
+    result = client.get(
+        "/api/v1/epg/events/search?league=nfl&target_date=2026-10-04"
+    ).json()["events"][0]
+    assert result["expected_end_time"] == (event.start_time + timedelta(hours=hours)).isoformat()
+    assert result["timing_basis"] == "sport_duration"
+
+
+def test_duration_settings_changes_and_default_fallback(api, monkeypatch, event):
+    client, service = api
+    settings = AllSettings()
+    settings.durations.football = 4.25
+    settings.durations.default = 2.25
+    monkeypatch.setattr(epg, "get_all_settings", lambda conn: settings)
+    url = "/api/v1/epg/events/search?league=nfl&target_date=2026-10-04"
+    result = client.get(url).json()["events"][0]
+    assert result["expected_end_time"] == "2026-10-04T21:15:00+00:00"
+    assert result["timing_basis"] == "sport_duration"
+    service.get_events.return_value = [replace(event, sport="unsupported")]
+    result = client.get(url).json()["events"][0]
+    assert result["expected_end_time"] == "2026-10-04T19:15:00+00:00"
+    assert result["timing_basis"] == "default_duration"
+
+
+@pytest.mark.parametrize("start,expected", [
+    (datetime(2026, 10, 4, 23, tzinfo=UTC), "2026-10-05T02:30:00+00:00"),
+    # Spring-forward: duration is elapsed time, not wall-clock arithmetic.
+    (datetime(2026, 3, 8, 1, tzinfo=ZoneInfo("America/Vancouver")),
+     "2026-03-08T12:30:00+00:00"),
+    (datetime(2026, 10, 4, 17), "2026-10-04T20:30:00+00:00"),
+])
+def test_end_estimate_handles_midnight_dst_and_legacy_naive_times(event, start, expected):
+    assert epg._event_end_estimate(replace(event, start_time=start), {"football": 3.5}, 3) == (
+        expected, "sport_duration",
+    )
+
+
+@pytest.mark.parametrize("hours", [0, -1, float("inf"), float("nan"), 1e100])
+def test_unusable_duration_does_not_invent_end_time(api, monkeypatch, hours):
+    client, _ = api
+    settings = AllSettings()
+    settings.durations.football = hours
+    monkeypatch.setattr(epg, "get_all_settings", lambda conn: settings)
+    response = client.get("/api/v1/epg/events/search?league=nfl&target_date=2026-10-04")
+    assert response.status_code == 200
+    result = response.json()["events"][0]
+    assert result["expected_end_time"] is None
+    assert result["end_time_estimated"] is None
+    assert result["timing_basis"] is None
+
+
+@pytest.mark.parametrize("state", ["live", "final", "postponed", "cancelled"])
+def test_estimate_never_replaces_provider_status(api, event, state):
+    client, service = api
+    # Deliberately in the past: passing the estimate cannot finish an event.
+    service.get_events.return_value = [replace(
+        event, start_time=datetime(2020, 1, 1, tzinfo=UTC), status=EventStatus(state=state),
+    )]
+    result = client.get(
+        "/api/v1/epg/events/search?league=nfl&target_date=2020-01-01"
+    ).json()["events"][0]
+    assert result["status"] == state
+    assert result["end_time_estimated"] is True
