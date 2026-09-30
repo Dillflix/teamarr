@@ -160,18 +160,23 @@ Extend the same `TEAMARR_BROADCAST_CONFIG` JSON file used by existing sources:
 ```json
 {
   "controller": {
-    "league_apps": {"nfl": "prime_video"},
+    "league_apps": {"nfl": "prime_video", "mlb": "prime_video"},
     "source_apps": {"nfl_redzone": "prime_video"}
   }
 }
 ```
 
-Those are the defaults for this fork, reflecting its owner's NFL access. Set either
+Those are the defaults for this fork, reflecting its owner's NFL and MLB access. Set either
 mapping to `{}` to disable that route. Add other league routes only when they are
 valid for your subscriptions. Golf and special-event coverage retain their own
 configured app/allowlist rules. Provider broadcaster names are exposed separately
 and never converted automatically into Canadian app routes. App identifiers are
 logical controller keys, not Android package names.
+
+An explicit `controller.league_apps` object replaces the default mapping. If your
+existing configuration specifies this object, add `"mlb": "prime_video"` alongside
+your other league routes. With no explicit mapping, MLB entries now include an
+eligible `route:mlb:prime_video` viewing option with `basis: "configured_route"`.
 
 ## Metadata and artwork
 

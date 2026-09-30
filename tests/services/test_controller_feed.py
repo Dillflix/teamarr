@@ -158,6 +158,14 @@ def test_live_overtime_survives_estimated_end_and_status_filter():
     assert items[0].expected_end_time < query(start=dt("2026-10-04T22:00:00Z")).start
 
 
+@pytest.mark.parametrize("routes,apps", [({}, []), ({"mlb": "sportsnet"}, ["sportsnet"])])
+def test_explicit_mlb_routing_replaces_default_prime_video(routes, apps):
+    config = BroadcastConfig.model_validate({"controller": {"league_apps": routes}})
+    service, _ = builder([game(league="mlb", sport="baseball")], config=config)
+    item = service.build(query(leagues=["mlb"]))[0]
+    assert [option.app for option in item.viewing_options] == apps
+
+
 def test_overnight_previous_day_and_half_open_window_boundaries():
     events = [
         game("overnight", "2026-10-03T23:00:00Z"),
@@ -477,6 +485,22 @@ def api_params(**updates):
     )
     data.update(updates)
     return data
+
+
+def test_http_mlb_has_eligible_prime_video_route(api):
+    client, service, _ = api
+    service.get_events.return_value = [game("mlb-game", league="mlb", sport="baseball")]
+    response = client.get("/api/v1/events/feed", params=api_params(league="mlb"))
+    assert response.status_code == 200
+    item = response.json()["items"][0]
+    assert item["competition"] == "mlb"
+    option = item["viewing_options"][0]
+    assert option["id"] == "route:mlb:prime_video"
+    assert option["app"] == "prime_video"
+    assert option["decision"] == "eligible"
+    assert option["basis"] == "configured_route"
+    assert option["reasons"] == ["user_configured_league_route"]
+    assert item["preferred_option_id"] == option["id"]
 
 
 def test_http_snapshot_pagination_does_not_refetch_and_contract_in_openapi(api):
