@@ -159,7 +159,16 @@ def test_live_overtime_survives_estimated_end_and_status_filter():
     assert items[0].expected_end_time < query(start=dt("2026-10-04T22:00:00Z")).start
 
 
-@pytest.mark.parametrize("league,sport", [("mlb", "baseball"), ("nhl", "hockey")])
+@pytest.mark.parametrize(
+    "league,sport",
+    [
+        ("mlb", "baseball"),
+        ("nhl", "hockey"),
+        ("nba", "basketball"),
+        ("cfl", "football"),
+        ("uefa.champions", "soccer"),
+    ],
+)
 @pytest.mark.parametrize("app,apps", [(None, []), ("sportsnet", ["sportsnet"])])
 def test_explicit_league_routing_replaces_default_prime_video(league, sport, app, apps):
     routes = {league: app} if app else {}
@@ -490,7 +499,16 @@ def api_params(**updates):
     return data
 
 
-@pytest.mark.parametrize("league,sport", [("mlb", "baseball"), ("nhl", "hockey")])
+@pytest.mark.parametrize(
+    "league,sport",
+    [
+        ("mlb", "baseball"),
+        ("nhl", "hockey"),
+        ("nba", "basketball"),
+        ("cfl", "football"),
+        ("uefa.champions", "soccer"),
+    ],
+)
 def test_http_league_has_eligible_prime_video_route(api, league, sport):
     client, service, _ = api
     service.get_events.return_value = [game("league-game", league=league, sport=sport)]

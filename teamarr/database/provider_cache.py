@@ -107,6 +107,9 @@ def racing_session_to_dict(session: RacingSession) -> dict:
         "name": session.name,
         "start_time": session.start_time.isoformat(),
         "results": [racing_result_to_dict(r) for r in session.results],
+        "id": session.id,
+        "status": session.status,
+        "status_detail": session.status_detail,
     }
 
 
@@ -236,6 +239,9 @@ def dict_to_racing_session(data: dict) -> RacingSession:
         name=data["name"],
         start_time=datetime.fromisoformat(data["start_time"]),
         results=[dict_to_racing_result(r) for r in data.get("results", [])],
+        id=data.get("id"),
+        status=data.get("status", "unknown"),
+        status_detail=data.get("status_detail"),
     )
 
 

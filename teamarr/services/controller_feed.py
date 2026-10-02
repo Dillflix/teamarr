@@ -1,12 +1,13 @@
 """Read-only aggregation of sports, special sessions and broadcast coverage."""
 
 from collections.abc import Callable
+from dataclasses import replace
 from datetime import UTC, date, datetime, timedelta, tzinfo
 from typing import cast
 from urllib.parse import quote
 from zoneinfo import ZoneInfo
 
-from teamarr.core import Event
+from teamarr.core import Event, EventStatus
 from teamarr.core.broadcast import BroadcastSession
 from teamarr.core.controller_feed import (
     FeedEntry,
@@ -134,6 +135,41 @@ class ControllerFeedBuilder:
             )
         return item
 
+    def _racing_sessions(self, event: Event) -> list[FeedEntry]:
+        """Discover provider sessions, not a fictional weekend-long live event."""
+        items = []
+        for session in event.sessions:
+            if not session.id:
+                # Old cache records and providers without session identities must
+                # refresh before they can supply stable controller commitments.
+                continue
+            entry = self._event(
+                replace(
+                    event,
+                    id=session.id,
+                    name=f"{event.name} — {session.name}",
+                    short_name=session.name,
+                    start_time=session.start_time,
+                    status=EventStatus(session.status, detail=session.status_detail),
+                    # Provider racing placeholders are not competing home/away teams.
+                    home_team=None,
+                    away_team=None,
+                )
+            )
+            entry.id = identity("session", event.provider, event.league, event.id, session.id)
+            entry.kind = "session"
+            entry.related_ids = [event_id(event)]
+            # Keep the original weekend and session identity in structured fields.
+            entry.event = entry.event.model_copy(
+                update={
+                    "tournament_id": event.id,
+                    "tournament_name": event.name,
+                    "round_name": session.name,
+                }
+            )
+            items.append(entry)
+        return items
+
     def _option(self, broadcast: BroadcastSession) -> FeedViewingOption:
         app = broadcast.playback_target or self.config.controller.source_apps.get(broadcast.source)
         excluded = []
@@ -228,7 +264,13 @@ class ControllerFeedBuilder:
             for league in dict.fromkeys(query.leagues):
                 for day in sorted(dates_between(discovery_start, end, self.timezone)):
                     for event in self._fetch(league, day):
-                        items[event_id(event)] = self._event(event)
+                        entries = (
+                            self._racing_sessions(event)
+                            if event.league == "f1"
+                            else [self._event(event)]
+                        )
+                        for entry in entries:
+                            items[entry.id] = entry
 
         # Keep each source's date buckets separate: a long configured Olympic
         # window must not cause unrelated historic NFL or TSN schedule fetches.

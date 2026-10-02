@@ -13,13 +13,15 @@ FeedSource = Literal["games", "nfl_redzone", "golf", "special_events"]
 FeedStatus = Literal["scheduled", "live", "final", "postponed", "cancelled", "unknown"]
 WindowState = Literal["upcoming", "in_window", "elapsed", "unknown"]
 
+DEFAULT_LEAGUES = ["nfl", "nhl", "mlb", "nba", "cfl", "uefa.champions", "f1"]
+
 
 class ControllerConfig(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     # User's deployment routing, NOT inferred from ESPN broadcaster names.
     league_apps: dict[str, str] = Field(
-        default_factory=lambda: {"nfl": "prime_video", "mlb": "prime_video", "nhl": "prime_video"}
+        default_factory=lambda: dict.fromkeys(DEFAULT_LEAGUES, "prime_video")
     )
     source_apps: dict[str, str] = Field(default_factory=lambda: {"nfl_redzone": "prime_video"})
 
@@ -30,7 +32,7 @@ class FeedQuery(BaseModel):
     start: AwareDatetime
     end: AwareDatetime
     as_of: AwareDatetime
-    leagues: list[str] = Field(default_factory=lambda: ["nfl", "nhl", "mlb", "nba"], max_length=20)
+    leagues: list[str] = Field(default_factory=lambda: list(DEFAULT_LEAGUES), max_length=20)
     sources: list[FeedSource] = Field(
         default_factory=lambda: ["games", "nfl_redzone", "golf", "special_events"]
     )

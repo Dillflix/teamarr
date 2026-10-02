@@ -12,7 +12,7 @@ GET /api/v1/events/feed
 ```
 
 By default the window is now through the next 24 hours, with NFL, NHL, MLB and
-NBA games plus the enabled RedZone, golf and special-event sources.
+NBA, CFL, UEFA Champions League and Formula 1 sessions plus the enabled RedZone, golf and special-event sources.
 
 For a specific UTC window:
 
@@ -31,7 +31,7 @@ GET /api/v1/events/feed?status=scheduled&status=live&status=unknown
 | --- | --- |
 | `start`, `end` | ISO timestamps with an explicit offset; half-open window `[start,end)`. Default: now and start + 24 hours. Maximum span: 7 days. |
 | `as_of` | Optional offset-aware instant for calculating `window_state`; defaults to request time. It does not fetch historical provider state. |
-| `league` | Repeatable league codes, e.g. `league=nfl&league=nhl`. Defaults to NFL/NHL/MLB/NBA. Applies to ordinary game discovery; other sources have their own competition configuration. Maximum 20. |
+| `league` | Repeatable league codes, e.g. `league=nfl&league=nhl`. Defaults to NFL/NHL/MLB/NBA/CFL/uefa.champions/f1. Applies to ordinary game discovery; other sources have their own competition configuration. Maximum 20. |
 | `source` | Repeatable: `games`, `nfl_redzone`, `golf`, `special_events`. All four by default. |
 | `status` | Repeatable: `scheduled`, `live`, `final`, `postponed`, `cancelled`, `unknown`. No filter by default. |
 | `window_state` | Repeatable: `upcoming`, `in_window`, `elapsed`, `unknown`. Separate from provider status. |
@@ -58,7 +58,7 @@ increase lookback when needed.
     "start": "2026-10-04T16:00:00Z",
     "end": "2026-10-05T02:00:00Z",
     "as_of": "2026-10-04T18:00:00Z",
-    "leagues": ["nfl", "nhl", "mlb", "nba"],
+    "leagues": ["nfl", "nhl", "mlb", "nba", "cfl", "uefa.champions", "f1"],
     "sources": ["games", "nfl_redzone", "golf", "special_events"],
     "statuses": [],
     "window_states": [],
@@ -160,25 +160,44 @@ Extend the same `TEAMARR_BROADCAST_CONFIG` JSON file used by existing sources:
 ```json
 {
   "controller": {
-    "league_apps": {"nfl": "prime_video", "mlb": "prime_video", "nhl": "prime_video"},
+    "league_apps": {
+      "nfl": "prime_video", "nhl": "prime_video", "mlb": "prime_video",
+      "nba": "prime_video", "cfl": "prime_video",
+      "uefa.champions": "prime_video", "f1": "prime_video"
+    },
     "source_apps": {"nfl_redzone": "prime_video"}
   }
 }
 ```
 
-Those are the defaults for this fork, reflecting its owner's NFL, MLB and NHL access. Set either
-mapping to `{}` to disable that route. Add other league routes only when they are
-valid for your subscriptions. Golf and special-event coverage retain their own
-configured app/allowlist rules. Provider broadcaster names are exposed separately
-and never converted automatically into Canadian app routes. App identifiers are
-logical controller keys, not Android package names.
+Those defaults reflect this deployment's subscriptions: DAZN, Sportsnet and TSN
+are accessed exclusively within **Prime Video**. NBA, CFL, Champions League and
+F1 therefore use `prime_video`, not the broadcasters' standalone apps. This is
+configured access, not a claim that every game is included in a base Prime
+subscription. Regional availability and subscribed channels still apply.
 
-An explicit `controller.league_apps` object replaces the default mapping. If your
-existing configuration specifies this object, add `"nhl": "prime_video"` alongside
-your other league routes. With no explicit mapping, NHL entries include an
-eligible `route:nhl:prime_video` viewing option with `basis: "configured_route"`.
-This is a user-configured app route, not a claim that every game is included in
-a base Prime subscription; regional availability and add-on subscriptions still apply.
+An explicit `controller.league_apps` object replaces the complete default mapping;
+include every desired league or set it to `{}` to disable game/session routes.
+Each configured league supplies an eligible `route:<league>:prime_video` option
+with `basis: "configured_route"`. Provider broadcaster names remain attribution
+and are never automatically converted into app routes. Golf and special-event
+coverage retain their own configured routing rules.
+
+## Formula 1 sessions
+
+Each provider competition becomes its own `kind: "session"`, `source: "games"`
+entry: practice, sprint qualifying, sprint, qualifying or race. IDs include the
+provider, league, weekend ID and provider session ID; rescheduling or renaming
+never changes that identity. `event.tournament_id`/`tournament_name` identify the
+weekend and `event.round_name` identifies the session. The parent weekend is a
+related ID, not an additional playable weekend-long event. Home/away fields are
+null because the provider's racing placeholders are not teams.
+
+Session status comes from that session's provider data. A completed practice
+cannot finish Sunday's race, and a start time cannot prove a session is live.
+Expected ends remain sport-duration estimates. Sessions without provider IDs
+are omitted; legacy ESPN F1 cache records missing the new identity/status fields
+are refreshed through the existing cache service.
 
 ## Metadata and artwork
 

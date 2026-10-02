@@ -10,6 +10,7 @@ from pydantic import AwareDatetime, ValidationError
 from teamarr.api.dependencies import get_sports_service, get_tsn_golf_schedule
 from teamarr.config import get_user_timezone
 from teamarr.core.controller_feed import (
+    DEFAULT_LEAGUES,
     FeedQuery,
     FeedResponse,
     FeedSource,
@@ -75,7 +76,7 @@ def get_feed(
             start=start,
             end=end or start + timedelta(hours=24),
             as_of=as_of or now,
-            leagues=league if league is not None else ["nfl", "nhl", "mlb", "nba"],
+            leagues=league if league is not None else list(DEFAULT_LEAGUES),
             sources=source
             if source is not None
             else ["games", "nfl_redzone", "golf", "special_events"],

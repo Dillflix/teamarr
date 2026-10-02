@@ -181,7 +181,10 @@ def _team_dict_is_stale(team_dict: dict | None) -> bool:
 
 
 def _event_dict_is_stale(event_dict: dict) -> bool:
-    """Detect cached events written before short_name flowed end-to-end."""
+    """Detect legacy team details and F1 sessions missing provider evidence."""
+    if event_dict.get("league") == "f1" and event_dict.get("provider") == "espn":
+        if any("id" not in s or "status" not in s for s in event_dict.get("sessions", [])):
+            return True
     return _team_dict_is_stale(event_dict.get("home_team")) or _team_dict_is_stale(
         event_dict.get("away_team")
     )
@@ -307,7 +310,7 @@ class SportsDataService:
                 _event_dict_is_stale(e) for e in cached if isinstance(e, dict)
             ):
                 logger.debug(
-                    "[CACHE_STALE] %s — team data missing short_name, re-fetching",
+                    "[CACHE_STALE] %s — cached event schema incomplete, re-fetching",
                     cache_key,
                 )
                 self._cache.delete(cache_key)

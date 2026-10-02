@@ -142,6 +142,10 @@ class RacingSession:
     name: str  # "Practice 1", "Qualifying", "Race"
     start_time: datetime
     results: list["RacingResult"] = field(default_factory=list)
+    # Session identity and status come from the provider, never the weekend clock.
+    id: str | None = None
+    status: str = "unknown"
+    status_detail: str | None = None
 
 
 @dataclass

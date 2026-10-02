@@ -416,7 +416,25 @@ class TournamentParserMixin:
                 )
             )
 
-        return RacingSession(code=code, name=name, start_time=start_time, results=results)
+        status_type = competition.get("status", {}).get("type", {})
+        status = {"pre": "scheduled", "in": "live", "post": "final"}.get(
+            status_type.get("state"), "unknown"
+        )
+        # Cancellation/postponement can still carry ESPN's pre/post state.
+        status_name = str(status_type.get("name", "")).upper()
+        if status_name in {"STATUS_CANCELED", "STATUS_CANCELLED"}:
+            status = "cancelled"
+        elif status_name == "STATUS_POSTPONED":
+            status = "postponed"
+        return RacingSession(
+            code=code,
+            name=name,
+            start_time=start_time,
+            results=results,
+            id=str(competition["id"]) if competition.get("id") is not None else None,
+            status=status,
+            status_detail=status_type.get("detail"),
+        )
 
     def _has_fastest_lap_stat(self, statistics: list) -> bool:
         """Check ESPN per-competitor `statistics` for a fastest-lap flag."""
