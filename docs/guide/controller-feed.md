@@ -183,6 +183,13 @@ with `basis: "configured_route"`. Provider broadcaster names remain attribution
 and are never automatically converted into app routes. Golf and special-event
 coverage retain their own configured routing rules.
 
+## CFL schedules
+
+CFL discovery uses Bell Media's weekly schedule grouping IDs, rather than the
+monthly display dates also present in its calendar. The CFL schedule cache
+namespace is upgraded to bypass false empty snapshots from the old requests;
+other league caches and configuration are retained.
+
 ## Formula 1 sessions
 
 Each provider competition becomes its own `kind: "session"`, `source: "games"`

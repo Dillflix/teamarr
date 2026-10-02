@@ -119,12 +119,7 @@ class BellMediaClient(BaseHTTPClient):
             label="schedule",
         )
         groups = data.values() if isinstance(data, dict) else []
-        events = [
-            event
-            for group in groups
-            for event in group
-            if isinstance(event, dict)
-        ]
+        events = [event for group in groups for event in group if isinstance(event, dict)]
         if events:
             self._cache.set(cache_key, events, _TTL_SCHEDULE)
         return events
@@ -140,12 +135,15 @@ class BellMediaClient(BaseHTTPClient):
             and (group.get("endDate") or "") >= start.isoformat()
         }
         monthly_groups = calendar.get("monthlyCalendar") or {}
-        grouping_ids.update(
-            calendar_date
-            for month in monthly_groups.values()
-            for calendar_date in month.get("calendarDates") or []
-            if start.isoformat() <= calendar_date <= end.isoformat()
-        )
+        # Weekly calendars also contain monthly display dates, but those dates
+        # are not valid schedule grouping IDs (CFL returns an empty/non-JSON body).
+        if calendar.get("eventGroupingType") != "Week" and not weekly_groups:
+            grouping_ids.update(
+                calendar_date
+                for month in monthly_groups.values()
+                for calendar_date in month.get("calendarDates") or []
+                if start.isoformat() <= calendar_date <= end.isoformat()
+            )
         events: list[dict] = []
         for grouping in sorted(grouping_ids, key=str):
             events.extend(self.get_schedule_group(league, grouping, season))

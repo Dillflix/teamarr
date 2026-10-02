@@ -194,6 +194,14 @@ def test_seam_filters_provider_superset_to_user_day():
     assert [e.id for e in service.get_events("boxing", date(2026, 8, 23))] == ["sun"]
 
 
+def test_cfl_upgrade_bypasses_false_empty_schedule_cached_by_old_grouping_requests():
+    event = _event("cfl-game", datetime(2026, 10, 2, 23, 0, tzinfo=UTC))
+    event.league = "cfl"
+    service = _service([event])
+    service._cache.set("events_v2:cfl:2026-10-02:America/New_York", [])
+    assert [e.id for e in service.get_events("cfl", date(2026, 10, 2))] == ["cfl-game"]
+
+
 def _resolved(service) -> dict:
     """The user-day layer of the cache (``events_v2``), without raw buckets."""
     return {k: v for k, v in service._cache.store.items() if k.startswith("events_v2:")}

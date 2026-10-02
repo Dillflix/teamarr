@@ -109,6 +109,33 @@ def test_team_parsing_and_league_discovery():
     assert provider.get_supported_leagues() == ["cfl"]
 
 
+def test_weekly_calendar_never_sends_monthly_display_dates_as_schedule_groupings(monkeypatch):
+    client = BellMediaClient()
+    monkeypatch.setattr(
+        client,
+        "get_calendar",
+        lambda league: {
+            "season": 2026,
+            "eventGroupingType": "Week",
+            "weeklyCalendar": {
+                "20": {"startDate": "2026-09-25", "endDate": "2026-09-26"},
+                "21": {"startDate": "2026-10-02", "endDate": "2026-10-03"},
+            },
+            "monthlyCalendar": {"2026-10": {"calendarDates": ["2026-10-02", "2026-10-03"]}},
+        },
+    )
+    calls = []
+
+    def fetch(league, grouping, season):
+        assert grouping == 21 and season == 2026
+        calls.append(grouping)
+        return [{"eventId": 13419739}, {"eventId": 13419740}]
+
+    monkeypatch.setattr(client, "get_schedule_group", fetch)
+    assert len(client.get_events_between("cfl", date(2026, 10, 1), date(2026, 10, 4))) == 2
+    assert calls == [21]
+
+
 def test_hockey_team_parsing_uses_tsn_widget_logo_url():
     provider = _provider()
 
@@ -301,8 +328,9 @@ def test_client_reads_hockey_daily_calendar_groups(monkeypatch):
     monkeypatch.setattr(
         client,
         "get_schedule_group",
-        lambda league, grouping, season: groups.append(grouping)
-        or [{"eventId": grouping}, {"eventId": grouping}],
+        lambda league, grouping, season: (
+            groups.append(grouping) or [{"eventId": grouping}, {"eventId": grouping}]
+        ),
     )
 
     events = client.get_events_between("ohl", date(2026, 9, 13), date(2026, 9, 14))

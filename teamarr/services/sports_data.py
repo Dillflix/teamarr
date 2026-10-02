@@ -298,7 +298,10 @@ class SportsDataService:
         # by tz and version the namespace so pre-#590 entries (filtered by
         # provider calendars) can't mask newly discoverable events.
         cache_key = make_cache_key(
-            "events_v2", league, target_date.isoformat(), str(get_user_timezone())
+            # CFL's former mixed weekly/daily grouping requests cached false
+            # empty schedules. Bypass those entries once after the provider fix.
+            "events_v3" if league == "cfl" else "events_v2",
+            league, target_date.isoformat(), str(get_user_timezone())
         )
 
         def load_from_cache() -> list[Event] | _CacheMiss:
