@@ -19,7 +19,7 @@ class ControllerConfig(BaseModel):
 
     # User's deployment routing, NOT inferred from ESPN broadcaster names.
     league_apps: dict[str, str] = Field(
-        default_factory=lambda: {"nfl": "prime_video", "mlb": "prime_video"}
+        default_factory=lambda: {"nfl": "prime_video", "mlb": "prime_video", "nhl": "prime_video"}
     )
     source_apps: dict[str, str] = Field(default_factory=lambda: {"nfl_redzone": "prime_video"})
 
