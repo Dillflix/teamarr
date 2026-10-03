@@ -163,6 +163,7 @@ Extend the same `TEAMARR_BROADCAST_CONFIG` JSON file used by existing sources:
     "league_apps": {
       "nfl": "prime_video", "nhl": "prime_video", "mlb": "prime_video",
       "nba": "prime_video", "cfl": "prime_video",
+      "college-football": "prime_video",
       "uefa.champions": "prime_video", "f1": "prime_video"
     },
     "source_apps": {"nfl_redzone": "prime_video"}
@@ -172,12 +173,15 @@ Extend the same `TEAMARR_BROADCAST_CONFIG` JSON file used by existing sources:
 
 Those defaults reflect this deployment's subscriptions: DAZN, Sportsnet and TSN
 are accessed exclusively within **Prime Video**. NBA, CFL, Champions League and
-F1 therefore use `prime_video`, not the broadcasters' standalone apps. This is
-configured access, not a claim that every game is included in a base Prime
+F1 and College Football therefore use `prime_video`, not the broadcasters'
+standalone apps. This is configured access, not a claim that every game is included in a base Prime
 subscription. Regional availability and subscribed channels still apply.
 
 An explicit `controller.league_apps` object replaces the complete default mapping;
 include every desired league or set it to `{}` to disable game/session routes.
+Existing explicit mappings must add `"college-football": "prime_video"` to enable
+College Football. Its ESPN schedule and team-directory code is `college-football`,
+not `ncaaf`. This league is included in the default feed query and default routes.
 Each configured league supplies an eligible `route:<league>:prime_video` option
 with `basis: "configured_route"`. Provider broadcaster names remain attribution
 and are never automatically converted into app routes. Golf and special-event
