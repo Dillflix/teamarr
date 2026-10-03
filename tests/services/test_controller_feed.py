@@ -166,6 +166,7 @@ def test_live_overtime_survives_estimated_end_and_status_filter():
         ("nhl", "hockey"),
         ("nba", "basketball"),
         ("cfl", "football"),
+        ("college-football", "football"),
         ("uefa.champions", "soccer"),
     ],
 )
@@ -513,6 +514,7 @@ def api_params(**updates):
         ("nhl", "hockey"),
         ("nba", "basketball"),
         ("cfl", "football"),
+        ("college-football", "football"),
         ("uefa.champions", "soccer"),
     ],
 )
