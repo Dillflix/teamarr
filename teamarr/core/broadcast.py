@@ -39,6 +39,15 @@ class BroadcastSession:
     related_sessions: tuple[ScheduledSessionReference, ...] = ()
     presentation: str | None = None
     stream_title: str | None = None
+    provider: str | None = None
+    provider_event_id: str | None = None
+    provider_asset_id: str | None = None
+    tournament_id: str | None = None
+    tournament_name: str | None = None
+    competition_name: str | None = None
+    status: str = "unknown"
+    status_received_at: datetime | None = None
+    artwork_url: str | None = None
 
 
 class BroadcastSessionSource(Protocol):

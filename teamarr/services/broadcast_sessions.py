@@ -15,6 +15,7 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator
 from teamarr.core.broadcast import BroadcastSession, EventReference
 from teamarr.core.controller_feed import ControllerConfig
 from teamarr.core.types import SEASON_REGULAR, Event
+from teamarr.services.dazn_tennis import DAZNTennisConfig
 from teamarr.services.golf_sessions import GolfConfig
 from teamarr.services.special_events import SpecialEventsConfig
 
@@ -59,6 +60,7 @@ class BroadcastConfig(BaseModel):
 
     redzone: RedZoneConfig = Field(default_factory=RedZoneConfig)
     golf: GolfConfig = Field(default_factory=GolfConfig)
+    dazn_tennis: DAZNTennisConfig = Field(default_factory=DAZNTennisConfig)
     special_events: SpecialEventsConfig = Field(default_factory=SpecialEventsConfig)
     controller: ControllerConfig = Field(default_factory=ControllerConfig)
 

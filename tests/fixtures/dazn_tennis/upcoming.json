@@ -1,0 +1,41 @@
+{
+  "Id": "en-ca-2026-10-03",
+  "Tiles": [
+    {
+      "Id": "Epg:ey5rooe77tgul76nvfcq8ln9s",
+      "AssetId": "ey5rooe77tgul76nvfcq8ln9s",
+      "EventId": "2ghsfw9w0l0wsw2gw056k7ssu",
+      "Type": "UpComing",
+      "DisplayType": "UpComing",
+      "VideoType": "Vod",
+      "Title": "Beijing Open: Day 5 Session 1",
+      "Start": "2026-10-04T03:00:00Z",
+      "End": null,
+      "EventStartTime": "2026-10-04T03:00:00Z",
+      "ExpirationDate": "2026-10-04T03:10:00Z",
+      "Sport": {
+        "Id": "4rheplujt9zryv3fqvtu1jpah",
+        "Title": "Tennis"
+      },
+      "Competition": {
+        "Id": "biwdhzqhhzuv4yc8vt4mi4u64",
+        "Title": "WTA China Open"
+      },
+      "TournamentCalendar": {
+        "Id": "phsaruir68320kcr1reobwfvl0",
+        "Title": "WTA Beijing, China Women Singles 2026"
+      },
+      "Contestants": [],
+      "IsLinear": false,
+      "IsGeoRestricted": false,
+      "Image": {
+        "ImageMimeType": "png",
+        "ImageType": "image-header",
+        "Id": "ey5rooe77tgul76nvfcq8ln9s_image-header_pCa_1789120038000"
+      }
+    }
+  ],
+  "Date": "2026-10-03",
+  "Generated": "2026-10-03T00:00:00Z",
+  "LinearOnly": false
+}

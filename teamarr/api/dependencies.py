@@ -3,8 +3,14 @@
 from functools import lru_cache
 
 from teamarr.services import SportsDataService, create_default_service
+from teamarr.services.dazn_tennis import DAZNTennisScheduleService
 from teamarr.services.golf import GolfCatalogService
 from teamarr.services.tsn_golf import TSNGolfScheduleService
+
+
+@lru_cache
+def get_dazn_tennis_schedule() -> DAZNTennisScheduleService:
+    return DAZNTennisScheduleService()
 
 
 @lru_cache

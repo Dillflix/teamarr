@@ -9,7 +9,7 @@ from teamarr.core.broadcast import BroadcastSession
 from teamarr.core.event_details import EventArtwork, EventSearchResult
 from teamarr.core.special_events import ScheduledSession
 
-FeedSource = Literal["games", "nfl_redzone", "golf", "special_events"]
+FeedSource = Literal["games", "nfl_redzone", "golf", "special_events", "dazn_tennis"]
 FeedStatus = Literal["scheduled", "live", "final", "postponed", "cancelled", "unknown"]
 WindowState = Literal["upcoming", "in_window", "elapsed", "unknown"]
 
@@ -34,7 +34,7 @@ class FeedQuery(BaseModel):
     as_of: AwareDatetime
     leagues: list[str] = Field(default_factory=lambda: list(DEFAULT_LEAGUES), max_length=20)
     sources: list[FeedSource] = Field(
-        default_factory=lambda: ["games", "nfl_redzone", "golf", "special_events"]
+        default_factory=lambda: ["games", "nfl_redzone", "golf", "special_events", "dazn_tennis"]
     )
     statuses: list[FeedStatus] = Field(default_factory=list)
     window_states: list[WindowState] = Field(default_factory=list)
@@ -87,6 +87,7 @@ class FeedEntry(BaseModel):
     timing_basis: str | None = None
     status: FeedStatus = "unknown"
     status_basis: Literal["provider", "configured", "unknown"] = "unknown"
+    status_received_at: datetime | None = None
     window_state: WindowState = "unknown"
     event: EventSearchResult | None = None
     sessions: list[ScheduledSession] = Field(default_factory=list)
