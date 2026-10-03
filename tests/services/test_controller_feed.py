@@ -465,7 +465,11 @@ def api(monkeypatch):
     from fastapi import FastAPI
     from fastapi.testclient import TestClient
 
-    from teamarr.api.dependencies import get_sports_service, get_tsn_golf_schedule
+    from teamarr.api.dependencies import (
+        get_dazn_tennis_schedule,
+        get_sports_service,
+        get_tsn_golf_schedule,
+    )
     from teamarr.api.routes import controller_feed as route
     from teamarr.database.settings.types import AllSettings
 
@@ -475,6 +479,9 @@ def api(monkeypatch):
     service.get_events.return_value = [game("a"), game("b"), game("c")]
     app.dependency_overrides[get_sports_service] = lambda: service
     app.dependency_overrides[get_tsn_golf_schedule] = lambda: Mock()
+    tennis = Mock()
+    tennis.get_sessions.return_value = []
+    app.dependency_overrides[get_dazn_tennis_schedule] = lambda: tennis
     app.dependency_overrides[route.get_feed_snapshots] = lambda: snapshots
     snapshots = FeedSnapshotStore()
     monkeypatch.setattr(route, "get_db", lambda: nullcontext(None))
@@ -575,6 +582,32 @@ def test_http_source_exception_is_not_successful_empty_feed(api):
     client, service, _ = api
     service.get_events.side_effect = RuntimeError("provider unavailable")
     assert client.get("/api/v1/events/feed", params=api_params()).status_code == 503
+
+
+def test_http_dazn_source_supports_empty_game_leagues_and_stable_pagination(api):
+    import json
+    from pathlib import Path
+
+    from teamarr.api.dependencies import get_dazn_tennis_schedule
+    from teamarr.services.dazn_tennis import parse_dazn_tennis
+
+    client, _, _ = api
+    day = dt("2026-10-03T00:00:00Z").date()
+    data = json.loads((Path(__file__).parents[1] / "fixtures/dazn_tennis/live.json").read_text())
+    tennis = client.app.dependency_overrides[get_dazn_tennis_schedule]()
+    tennis.get_sessions.return_value = parse_dazn_tennis(data, day, dt("2026-10-03T06:00:00Z"))
+    params = api_params(source="dazn_tennis", start="2026-10-03T06:00:00Z",
+                        end="2026-10-04T06:00:00Z")
+    response = client.get("/api/v1/events/feed", params=params)
+    assert response.status_code == 200
+    item = response.json()["items"][0]
+    assert item["kind"] == "broadcast" and item["event"] is None
+    assert item["title"] == "Beijing Open: Day 4"
+    assert item["viewing_options"][0]["app"] == "prime_video"
+    assert item["viewing_options"][0]["channel"] == "DAZN"
+    assert item["artwork"]["cover_url"].startswith("https://image.discovery.indazn.com/")
+    tennis.get_sessions.side_effect = RuntimeError("schedule unavailable")
+    assert client.get("/api/v1/events/feed", params=params).status_code == 503
 
 
 def test_http_invalid_configuration_is_503(api, monkeypatch):

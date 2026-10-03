@@ -67,9 +67,11 @@ class ControllerFeedBuilder:
         durations: dict[str, float],
         default_duration: float,
         art_base_url: str = "",
+        get_tennis: Callable[[date], list[BroadcastSession]] | None = None,
     ):
         self.get_events = get_events
         self.get_golf = get_golf
+        self.get_tennis = get_tennis
         self.config = config
         self.timezone = timezone
         self.leagues = leagues
@@ -208,6 +210,7 @@ class ControllerFeedBuilder:
             kind="broadcast",
             source=cast(FeedSource, broadcast.source),
             title=broadcast.title,
+            provider=broadcast.provider,
             competition=broadcast.competition,
             sports=list(broadcast.sports) or ([broadcast.sport] if broadcast.sport else []),
             start_time=utc(broadcast.start_time),
@@ -217,11 +220,15 @@ class ControllerFeedBuilder:
             end_time_estimated=broadcast.end_time_estimated,
             timing_basis=broadcast.timing_basis,
             # A scheduled TV window is not provider-confirmed live sporting action.
-            status="unknown",
-            status_basis="unknown",
+            status=cast(FeedStatus, broadcast.status)
+            if broadcast.source == "dazn_tennis" and broadcast.status in {"live", "scheduled"}
+            else "unknown",
+            status_basis="provider" if broadcast.source == "dazn_tennis" else "unknown",
+            status_received_at=broadcast.status_received_at,
             broadcast=broadcast,
             viewing_options=[self._option(broadcast)],
-            artwork=league_artwork(
+            artwork=EventArtwork(cover_url=broadcast.artwork_url)
+            if broadcast.artwork_url else league_artwork(
                 broadcast.competition, self.leagues[broadcast.competition], self.art_base_url
             )
             if broadcast.competition in self.leagues
@@ -277,6 +284,7 @@ class ControllerFeedBuilder:
         source_days = {
             "nfl_redzone": dates_between(discovery_start, end, ZoneInfo("America/New_York")),
             "golf": dates_between(discovery_start, end, ZoneInfo("America/New_York")),
+            "dazn_tennis": dates_between(discovery_start, end, UTC),
             "special_events": set(),
         }
         editions = {edition.id: edition for edition in self.config.special_events.editions}
@@ -374,6 +382,19 @@ class ControllerFeedBuilder:
                 items[item.id] = item
 
         broadcasts: dict[str, BroadcastSession] = {}
+        if "dazn_tennis" in query.sources and self.config.dazn_tennis.enabled:
+            if self.get_tennis is None:
+                raise ValueError("DAZN tennis schedule source is not configured")
+            for day in sorted(source_days["dazn_tennis"]):
+                for session in self.get_tennis(day):
+                    previous = broadcasts.get(session.id)
+                    # Overlapping EPG days can include the same event. Use the
+                    # latest acquired record, never the order of date buckets.
+                    if (
+                        previous is None
+                        or session.status_received_at >= previous.status_received_at
+                    ):
+                        broadcasts[session.id] = session
         redzone = RedZoneSource(self._fetch, self.timezone, self.config.redzone)
         for source, get_sessions in (
             ("nfl_redzone", redzone.get_sessions),

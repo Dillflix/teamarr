@@ -7,7 +7,11 @@ from datetime import UTC, datetime, timedelta
 from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from pydantic import AwareDatetime, ValidationError
 
-from teamarr.api.dependencies import get_sports_service, get_tsn_golf_schedule
+from teamarr.api.dependencies import (
+    get_dazn_tennis_schedule,
+    get_sports_service,
+    get_tsn_golf_schedule,
+)
 from teamarr.config import get_user_timezone
 from teamarr.core.controller_feed import (
     DEFAULT_LEAGUES,
@@ -22,6 +26,7 @@ from teamarr.database.leagues import get_all_leagues
 from teamarr.database.settings import get_all_settings
 from teamarr.services.broadcast_sessions import load_broadcast_config
 from teamarr.services.controller_feed import ControllerFeedBuilder
+from teamarr.services.dazn_tennis import DAZNTennisScheduleService
 from teamarr.services.feed_snapshots import FeedSnapshotStore, SnapshotExpired
 from teamarr.services.sports_data import SportsDataService
 from teamarr.services.tsn_golf import TSNGolfScheduleService, get_golf_sessions
@@ -50,6 +55,7 @@ def get_feed(
     cursor: str | None = Query(None, max_length=64),
     service: SportsDataService = Depends(get_sports_service),
     tsn: TSNGolfScheduleService = Depends(get_tsn_golf_schedule),
+    tennis: DAZNTennisScheduleService = Depends(get_dazn_tennis_schedule),
     snapshots: FeedSnapshotStore = Depends(get_feed_snapshots),
 ) -> FeedResponse:
     """Overlapping games and broadcasts, sorted by UTC start then stable ID.
@@ -79,7 +85,7 @@ def get_feed(
             leagues=league if league is not None else list(DEFAULT_LEAGUES),
             sources=source
             if source is not None
-            else ["games", "nfl_redzone", "golf", "special_events"],
+            else ["games", "nfl_redzone", "golf", "special_events", "dazn_tennis"],
             statuses=status or [],
             window_states=window_state or [],
             lookback_hours=lookback_hours,
@@ -106,6 +112,7 @@ def get_feed(
         durations,
         default,
         settings.epg.art_base_url or "",
+        get_tennis=tennis.get_sessions,
     )
     try:
         items = builder.build(query)

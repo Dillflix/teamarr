@@ -7,10 +7,15 @@ from typing import Literal
 from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import ValidationError
 
-from teamarr.api.dependencies import get_sports_service, get_tsn_golf_schedule
+from teamarr.api.dependencies import (
+    get_dazn_tennis_schedule,
+    get_sports_service,
+    get_tsn_golf_schedule,
+)
 from teamarr.config import get_user_timezone
 from teamarr.core.broadcast import BroadcastSession
 from teamarr.services.broadcast_sessions import RedZoneSource, load_broadcast_config
+from teamarr.services.dazn_tennis import DAZNTennisScheduleService
 from teamarr.services.special_coverage import SpecialCoverageSource
 from teamarr.services.sports_data import SportsDataService
 from teamarr.services.tsn_golf import TSNGolfScheduleService, get_golf_sessions
@@ -24,9 +29,10 @@ def get_broadcast_sessions(
     target_date: date = Query(
         description="Session start date in its timezone (Eastern for RedZone)"
     ),
-    source: Literal["nfl_redzone", "golf", "special_events"] = "nfl_redzone",
+    source: Literal["nfl_redzone", "golf", "special_events", "dazn_tennis"] = "nfl_redzone",
     service: SportsDataService = Depends(get_sports_service),
     tsn: TSNGolfScheduleService = Depends(get_tsn_golf_schedule),
+    tennis: DAZNTennisScheduleService = Depends(get_dazn_tennis_schedule),
 ) -> list[BroadcastSession]:
     """Enumerate planning sessions; does not start or stop device playback."""
     try:
@@ -35,6 +41,14 @@ def get_broadcast_sessions(
         logger.error("[BROADCAST] Invalid broadcast configuration: %s", exc)
         raise HTTPException(status_code=503, detail="Invalid broadcast configuration") from exc
 
+    if source == "dazn_tennis":
+        if not config.dazn_tennis.enabled:
+            return []
+        try:
+            return tennis.get_sessions(target_date)
+        except Exception as exc:
+            logger.warning("[DAZN_TENNIS] Schedule fetch failed: %s", type(exc).__name__)
+            raise HTTPException(503, "Unable to fetch DAZN tennis schedule") from exc
     if source == "golf":
         return get_golf_sessions(target_date, config.golf, tsn)
     if source == "special_events":

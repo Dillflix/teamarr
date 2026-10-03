@@ -223,6 +223,12 @@ broadcasts can use league artwork; no fake teams are constructed.
 
 ## Extension boundary
 
+Continuous DAZN tennis coverage is now available through the `dazn_tennis`
+source, included in the default source set independently of game leagues.
+See [DAZN tennis coverage](tennis-coverage.md) for configuration, source fields,
+identity, freshness, and upgrade order. These are broadcast sessions routed
+through Prime Video, not individual ATP/WTA match entries.
+
 The feed separates sporting identity, coverage, app routing and controller action.
 Additional sports can use existing Teamarr league providers; new coverage sources
 should produce `BroadcastSession` records with exact parent/session references.
