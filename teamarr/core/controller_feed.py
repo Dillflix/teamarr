@@ -13,7 +13,10 @@ FeedSource = Literal["games", "nfl_redzone", "golf", "special_events", "dazn_ten
 FeedStatus = Literal["scheduled", "live", "final", "postponed", "cancelled", "unknown"]
 WindowState = Literal["upcoming", "in_window", "elapsed", "unknown"]
 
-DEFAULT_LEAGUES = ["nfl", "college-football", "nhl", "mlb", "nba", "cfl", "uefa.champions", "f1"]
+DEFAULT_LEAGUES = [
+    "nfl", "college-football", "nhl", "mlb", "nba", "cfl", "uefa.champions",
+    "eng.2", "ger.1", "ger.2", "f1",
+]
 
 
 class ControllerConfig(BaseModel):

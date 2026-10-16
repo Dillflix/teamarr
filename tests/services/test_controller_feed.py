@@ -168,6 +168,9 @@ def test_live_overtime_survives_estimated_end_and_status_filter():
         ("cfl", "football"),
         ("college-football", "football"),
         ("uefa.champions", "soccer"),
+        ("eng.2", "soccer"),
+        ("ger.1", "soccer"),
+        ("ger.2", "soccer"),
     ],
 )
 @pytest.mark.parametrize("app,apps", [(None, []), ("sportsnet", ["sportsnet"])])
@@ -177,6 +180,25 @@ def test_explicit_league_routing_replaces_default_prime_video(league, sport, app
     service, _ = builder([game(league=league, sport=sport)], config=config)
     item = service.build(query(leagues=[league]))[0]
     assert [option.app for option in item.viewing_options] == apps
+
+
+@pytest.mark.parametrize("league", ["eng.2", "ger.1", "ger.2"])
+def test_soccer_default_discovery_emits_prime_route_and_provider_identity(league):
+    event = game(league=league, sport="soccer", status=EventStatus("live"))
+    service, calls = builder([event])
+    default_query = FeedQuery(**query().model_dump(exclude={"leagues"}))
+    items = service.build(default_query)
+    assert len(items) == 1
+    item = items[0]
+    assert item.id == event_id(event)
+    assert item.competition == league
+    assert item.status == "live"
+    assert any(key[0] == league for key in calls)
+    option = item.viewing_options[0]
+    assert option.app == "prime_video"
+    assert option.basis == "configured_route"
+    assert option.decision == "eligible"
+    assert item.preferred_option_id == option.id
 
 
 def test_overnight_previous_day_and_half_open_window_boundaries():
