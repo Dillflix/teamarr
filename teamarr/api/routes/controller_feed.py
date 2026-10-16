@@ -15,6 +15,7 @@ from teamarr.api.dependencies import (
 from teamarr.config import get_user_timezone
 from teamarr.core.controller_feed import (
     DEFAULT_LEAGUES,
+    MAX_FEED_LEAGUES,
     FeedQuery,
     FeedResponse,
     FeedSource,
@@ -46,7 +47,7 @@ def get_feed(
     start: AwareDatetime | None = None,
     end: AwareDatetime | None = None,
     as_of: AwareDatetime | None = None,
-    league: list[str] | None = Query(None, max_length=20),
+    league: list[str] | None = Query(None, max_length=MAX_FEED_LEAGUES),
     source: list[FeedSource] | None = Query(None),
     status: list[FeedStatus] | None = Query(None),
     window_state: list[WindowState] | None = Query(None),
