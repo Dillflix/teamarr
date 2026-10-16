@@ -31,7 +31,7 @@ GET /api/v1/events/feed?status=scheduled&status=live&status=unknown
 | --- | --- |
 | `start`, `end` | ISO timestamps with an explicit offset; half-open window `[start,end)`. Default: now and start + 24 hours. Maximum span: 7 days. |
 | `as_of` | Optional offset-aware instant for calculating `window_state`; defaults to request time. It does not fetch historical provider state. |
-| `league` | Repeatable league codes, e.g. `league=nfl&league=nhl`. Defaults to NFL/NHL/MLB/NBA/CFL/uefa.champions/f1. Applies to ordinary game discovery; other sources have their own competition configuration. Maximum 20. |
+| `league` | Repeatable league codes, e.g. `league=nfl&league=nhl`. Defaults to NFL, College Football, NHL, MLB, NBA, CFL, UEFA Champions League, EFL Championship (`eng.2`), Bundesliga (`ger.1`), 2. Bundesliga (`ger.2`) and F1. Applies to ordinary game discovery; other sources have their own competition configuration. Maximum 20. |
 | `source` | Repeatable: `games`, `nfl_redzone`, `golf`, `special_events`. All four by default. |
 | `status` | Repeatable: `scheduled`, `live`, `final`, `postponed`, `cancelled`, `unknown`. No filter by default. |
 | `window_state` | Repeatable: `upcoming`, `in_window`, `elapsed`, `unknown`. Separate from provider status. |
@@ -164,7 +164,8 @@ Extend the same `TEAMARR_BROADCAST_CONFIG` JSON file used by existing sources:
       "nfl": "prime_video", "nhl": "prime_video", "mlb": "prime_video",
       "nba": "prime_video", "cfl": "prime_video",
       "college-football": "prime_video",
-      "uefa.champions": "prime_video", "f1": "prime_video"
+      "uefa.champions": "prime_video", "f1": "prime_video",
+      "eng.2": "prime_video", "ger.1": "prime_video", "ger.2": "prime_video"
     },
     "source_apps": {"nfl_redzone": "prime_video"}
   }
@@ -179,6 +180,11 @@ subscription. Regional availability and subscribed channels still apply.
 
 An explicit `controller.league_apps` object replaces the complete default mapping;
 include every desired league or set it to `{}` to disable game/session routes.
+EFL Championship, Bundesliga and 2. Bundesliga reuse Teamarr's existing ESPN
+schedule/team providers. They are now included in default feed discovery and
+Prime Video routing. Existing explicit mappings must add `eng.2`, `ger.1` and
+`ger.2` with `prime_video` values to enable those routes; omitted entries remain
+unrouted. No database migration or new provider credentials are needed.
 Existing explicit mappings must add `"college-football": "prime_video"` to enable
 College Football. Its ESPN schedule and team-directory code is `college-football`,
 not `ncaaf`. This league is included in the default feed query and default routes.
