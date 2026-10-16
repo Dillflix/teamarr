@@ -8,12 +8,40 @@ from zoneinfo import ZoneInfo
 import pytest
 
 from teamarr.core import Event, EventStatus, Team, Venue
-from teamarr.core.controller_feed import FeedQuery
+from teamarr.core.controller_feed import DEFAULT_LEAGUES, MAX_FEED_LEAGUES, FeedQuery
 from teamarr.services.broadcast_sessions import BroadcastConfig
 from teamarr.services.controller_feed import ControllerFeedBuilder, event_id
 from teamarr.services.event_details import serialize_event
 from teamarr.services.feed_snapshots import FeedSnapshotStore, SnapshotExpired
 from teamarr.services.golf_sessions import GolfSessionSource
+
+EXPANDED_LEAGUES = [
+    ("eng.3", "soccer", "espn"),
+    ("eng.4", "soccer", "espn"),
+    ("uefa.europa", "soccer", "espn"),
+    ("uefa.europa.conf", "soccer", "espn"),
+    ("eng.1", "soccer", "espn"),
+    ("ita.1", "soccer", "espn"),
+    ("esp.1", "soccer", "espn"),
+    ("usa.1", "soccer", "espn"),
+    ("usa.nwsl", "soccer", "espn"),
+    ("eng.fa", "soccer", "espn"),
+    ("wnba", "basketball", "espn"),
+    ("mens-college-basketball", "basketball", "espn"),
+    ("womens-college-basketball", "basketball", "espn"),
+    ("pwhl", "hockey", "bellmedia"),
+    ("chl", "hockey", "bellmedia"),
+    ("ohl", "hockey", "bellmedia"),
+    ("whl", "hockey", "bellmedia"),
+    ("qmjhl", "hockey", "bellmedia"),
+    ("mens-college-hockey", "hockey", "espn"),
+    ("womens-college-hockey", "hockey", "espn"),
+    ("urc", "rugby", "espn"),
+    ("prem", "rugby", "espn"),
+    ("nrl", "rugby", "espn"),
+    ("afl", "australian-football", "squiggle"),
+    ("pll", "lacrosse", "espn"),
+]
 
 
 def dt(text):
@@ -182,9 +210,16 @@ def test_explicit_league_routing_replaces_default_prime_video(league, sport, app
     assert [option.app for option in item.viewing_options] == apps
 
 
-@pytest.mark.parametrize("league", ["eng.2", "ger.1", "ger.2"])
-def test_soccer_default_discovery_emits_prime_route_and_provider_identity(league):
-    event = game(league=league, sport="soccer", status=EventStatus("live"))
+@pytest.mark.parametrize("league,sport,provider", [
+    ("eng.2", "soccer", "espn"), ("ger.1", "soccer", "espn"), ("ger.2", "soccer", "espn"),
+] + EXPANDED_LEAGUES)
+def test_default_discovery_emits_prime_route_and_provider_identity(league, sport, provider):
+    event = game(league=league, sport=sport, provider=provider, status=EventStatus("live"))
+    event = replace(
+        event,
+        home_team=replace(event.home_team, provider=provider, league=league, sport=sport),
+        away_team=replace(event.away_team, provider=provider, league=league, sport=sport),
+    )
     service, calls = builder([event])
     default_query = FeedQuery(**query().model_dump(exclude={"leagues"}))
     items = service.build(default_query)
@@ -193,12 +228,37 @@ def test_soccer_default_discovery_emits_prime_route_and_provider_identity(league
     assert item.id == event_id(event)
     assert item.competition == league
     assert item.status == "live"
+    assert item.provider == item.event.provider == provider
     assert any(key[0] == league for key in calls)
     option = item.viewing_options[0]
     assert option.app == "prime_video"
     assert option.basis == "configured_route"
     assert option.decision == "eligible"
     assert item.preferred_option_id == option.id
+
+
+def test_expanded_leagues_use_existing_enabled_providers():
+    import sqlite3
+    from pathlib import Path
+
+    # Seed the schema without startup refreshes or external provider requests.
+    schema = Path(__file__).parents[2] / "teamarr" / "database" / "schema.sql"
+    with sqlite3.connect(":memory:") as db:
+        db.executescript(schema.read_text(encoding="utf-8"))
+        for league, sport, provider in EXPANDED_LEAGUES:
+            row = db.execute(
+                "SELECT provider, sport, enabled FROM leagues WHERE league_code=?", (league,)
+            ).fetchone()
+            assert row == (provider, sport, 1)
+
+
+@pytest.mark.parametrize("league,sport,provider", EXPANDED_LEAGUES)
+def test_new_leagues_respect_explicit_route_opt_out(league, sport, provider):
+    config = BroadcastConfig.model_validate({"controller": {"league_apps": {}}})
+    service, _ = builder([game(league=league, sport=sport, provider=provider)], config=config)
+    item = service.build(query(leagues=[league]))[0]
+    assert item.viewing_options == []
+    assert item.preferred_option_id is None
 
 
 def test_overnight_previous_day_and_half_open_window_boundaries():
@@ -606,6 +666,40 @@ def test_http_source_exception_is_not_successful_empty_feed(api):
     client, service, _ = api
     service.get_events.side_effect = RuntimeError("provider unavailable")
     assert client.get("/api/v1/events/feed", params=api_params()).status_code == 503
+
+
+@pytest.mark.parametrize("explicit", [True, False])
+def test_http_expanded_defaults_are_discovered_and_paginated(api, explicit):
+    client, service, _ = api
+    service.get_events.side_effect = lambda league, day: [
+        game(league=league, provider=provider, sport=sport)
+        for code, sport, provider in EXPANDED_LEAGUES if code == league
+    ]
+    params = api_params()
+    params.pop("league")
+    if explicit:
+        params["league"] = DEFAULT_LEAGUES
+    response = client.get("/api/v1/events/feed", params=params)
+    assert response.status_code == 200
+    assert response.json()["query"]["leagues"] == DEFAULT_LEAGUES
+    items = response.json()["items"]
+    calls = service.get_events.call_count
+    while response.json()["next_cursor"]:
+        response = client.get(
+            "/api/v1/events/feed", params={"cursor": response.json()["next_cursor"]}
+        )
+        assert response.status_code == 200
+        items.extend(response.json()["items"])
+    assert service.get_events.call_count == calls
+    assert {item["competition"] for item in items} == {row[0] for row in EXPANDED_LEAGUES}
+    assert len(items) == len(EXPANDED_LEAGUES)
+
+
+def test_http_rejects_too_many_leagues_before_fetch(api):
+    client, service, _ = api
+    params = api_params(league=[f"league-{i}" for i in range(MAX_FEED_LEAGUES + 1)])
+    assert client.get("/api/v1/events/feed", params=params).status_code == 422
+    service.get_events.assert_not_called()
 
 
 def test_http_dazn_source_supports_empty_game_leagues_and_stable_pagination(api):

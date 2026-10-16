@@ -31,7 +31,7 @@ GET /api/v1/events/feed?status=scheduled&status=live&status=unknown
 | --- | --- |
 | `start`, `end` | ISO timestamps with an explicit offset; half-open window `[start,end)`. Default: now and start + 24 hours. Maximum span: 7 days. |
 | `as_of` | Optional offset-aware instant for calculating `window_state`; defaults to request time. It does not fetch historical provider state. |
-| `league` | Repeatable league codes, e.g. `league=nfl&league=nhl`. Defaults to NFL, College Football, NHL, MLB, NBA, CFL, UEFA Champions League, EFL Championship (`eng.2`), Bundesliga (`ger.1`), 2. Bundesliga (`ger.2`) and F1. Applies to ordinary game discovery; other sources have their own competition configuration. Maximum 20. |
+| `league` | Repeatable canonical league codes, e.g. `league=nfl&league=nhl`. Defaults to the 36 leagues described below, including soccer, basketball, hockey, rugby, AFL and PLL. Applies to ordinary game discovery; other sources have their own competition configuration. Maximum 100. |
 | `source` | Repeatable: `games`, `nfl_redzone`, `golf`, `special_events`. All four by default. |
 | `status` | Repeatable: `scheduled`, `live`, `final`, `postponed`, `cancelled`, `unknown`. No filter by default. |
 | `window_state` | Repeatable: `upcoming`, `in_window`, `elapsed`, `unknown`. Separate from provider status. |
@@ -192,6 +192,86 @@ Each configured league supplies an eligible `route:<league>:prime_video` option
 with `basis: "configured_route"`. Provider broadcaster names remain attribution
 and are never automatically converted into app routes. Golf and special-event
 coverage retain their own configured routing rules.
+
+## Expanded league discovery
+
+In addition to the 11 defaults shown in the earlier configuration example, the
+following 25 competitions are included in default discovery and Prime Video
+routing. These reuse existing providers and require no new provider keys or
+database migration. League codes are the database/API identifiers, not aliases
+such as `epl`, `mls`, `ncaam` or `ncaah`.
+
+| Competition | Teamarr league code | Provider |
+| --- | --- | --- |
+| EFL League One | `eng.3` | espn |
+| EFL League Two | `eng.4` | espn |
+| UEFA Europa League | `uefa.europa` | espn |
+| UEFA Conference League | `uefa.europa.conf` | espn |
+| Premier League | `eng.1` | espn |
+| Serie A | `ita.1` | espn |
+| La Liga | `esp.1` | espn |
+| MLS | `usa.1` | espn |
+| NWSL | `usa.nwsl` | espn |
+| FA Cup | `eng.fa` | espn |
+| WNBA | `wnba` | espn |
+| NCAA Men's Basketball | `mens-college-basketball` | espn |
+| NCAA Women's Basketball | `womens-college-basketball` | espn |
+| PWHL | `pwhl` | bellmedia |
+| CHL | `chl` | bellmedia |
+| OHL | `ohl` | bellmedia |
+| WHL | `whl` | bellmedia |
+| QMJHL | `qmjhl` | bellmedia |
+| NCAA Men's Hockey | `mens-college-hockey` | espn |
+| NCAA Women's Hockey | `womens-college-hockey` | espn |
+| United Rugby Championship | `urc` | espn |
+| Premiership Rugby | `prem` | espn |
+| NRL | `nrl` | espn |
+| Australian AFL | `afl` | squiggle |
+| PLL | `pll` | espn |
+
+If `controller.league_apps` is absent, these routes are automatic. If it is
+present, merge the following entries into that map, preserving other routes
+and configuration. An explicit empty map continues to disable all game routes.
+
+```json
+{
+  "eng.3": "prime_video",
+  "eng.4": "prime_video",
+  "uefa.europa": "prime_video",
+  "uefa.europa.conf": "prime_video",
+  "eng.1": "prime_video",
+  "ita.1": "prime_video",
+  "esp.1": "prime_video",
+  "usa.1": "prime_video",
+  "usa.nwsl": "prime_video",
+  "eng.fa": "prime_video",
+  "wnba": "prime_video",
+  "mens-college-basketball": "prime_video",
+  "womens-college-basketball": "prime_video",
+  "pwhl": "prime_video",
+  "chl": "prime_video",
+  "ohl": "prime_video",
+  "whl": "prime_video",
+  "qmjhl": "prime_video",
+  "mens-college-hockey": "prime_video",
+  "womens-college-hockey": "prime_video",
+  "urc": "prime_video",
+  "prem": "prime_video",
+  "nrl": "prime_video",
+  "afl": "prime_video",
+  "pll": "prime_video"
+}
+```
+
+Configured routes permit the controller to search Prime Video; they do not prove
+that a fixture is carried by DAZN Canada, TSN or Sportsnet, or that a standalone
+service's digital content is included in its Prime channel. The controller's
+entitlement checks still decide whether an event can be requested.
+
+The matching controller 0.19.0 release makes these leagues selectable in Settings
+and migrates prior default selections. Custom selections remain unchanged.
+CHL and OHL/WHL/QMJHL remain distinct provider competitions, with original event
+identities preserved.
 
 ## CFL schedules
 

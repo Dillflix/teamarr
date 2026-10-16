@@ -16,7 +16,13 @@ WindowState = Literal["upcoming", "in_window", "elapsed", "unknown"]
 DEFAULT_LEAGUES = [
     "nfl", "college-football", "nhl", "mlb", "nba", "cfl", "uefa.champions",
     "eng.2", "ger.1", "ger.2", "f1",
+    "eng.3", "eng.4", "uefa.europa", "uefa.europa.conf", "eng.1", "ita.1",
+    "esp.1", "usa.1", "usa.nwsl", "eng.fa", "wnba",
+    "mens-college-basketball", "womens-college-basketball",
+    "pwhl", "chl", "ohl", "whl", "qmjhl", "mens-college-hockey", "womens-college-hockey",
+    "urc", "prem", "nrl", "afl", "pll",
 ]
+MAX_FEED_LEAGUES = 100
 
 
 class ControllerConfig(BaseModel):
@@ -35,7 +41,9 @@ class FeedQuery(BaseModel):
     start: AwareDatetime
     end: AwareDatetime
     as_of: AwareDatetime
-    leagues: list[str] = Field(default_factory=lambda: list(DEFAULT_LEAGUES), max_length=20)
+    leagues: list[str] = Field(
+        default_factory=lambda: list(DEFAULT_LEAGUES), max_length=MAX_FEED_LEAGUES
+    )
     sources: list[FeedSource] = Field(
         default_factory=lambda: ["games", "nfl_redzone", "golf", "special_events", "dazn_tennis"]
     )
