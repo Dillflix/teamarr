@@ -196,7 +196,7 @@ coverage retain their own configured routing rules.
 ## Expanded league discovery
 
 In addition to the 11 defaults shown in the earlier configuration example, the
-following 25 competitions are included in default discovery and Prime Video
+following 27 competitions are included in default discovery and Prime Video
 routing. These reuse existing providers and require no new provider keys or
 database migration. League codes are the database/API identifiers, not aliases
 such as `epl`, `mls`, `ncaam` or `ncaah`.
@@ -213,6 +213,8 @@ such as `epl`, `mls`, `ncaam` or `ncaah`.
 | MLS | `usa.1` | espn |
 | NWSL | `usa.nwsl` | espn |
 | FA Cup | `eng.fa` | espn |
+| EFL Cup (Carabao Cup) | `eng.league_cup` | espn |
+| DFB-Pokal | `ger.dfb_pokal` | espn |
 | WNBA | `wnba` | espn |
 | NCAA Men's Basketball | `mens-college-basketball` | espn |
 | NCAA Women's Basketball | `womens-college-basketball` | espn |
@@ -245,6 +247,8 @@ and configuration. An explicit empty map continues to disable all game routes.
   "usa.1": "prime_video",
   "usa.nwsl": "prime_video",
   "eng.fa": "prime_video",
+  "eng.league_cup": "prime_video",
+  "ger.dfb_pokal": "prime_video",
   "wnba": "prime_video",
   "mens-college-basketball": "prime_video",
   "womens-college-basketball": "prime_video",

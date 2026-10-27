@@ -17,7 +17,7 @@ DEFAULT_LEAGUES = [
     "nfl", "college-football", "nhl", "mlb", "nba", "cfl", "uefa.champions",
     "eng.2", "ger.1", "ger.2", "f1",
     "eng.3", "eng.4", "uefa.europa", "uefa.europa.conf", "eng.1", "ita.1",
-    "esp.1", "usa.1", "usa.nwsl", "eng.fa", "wnba",
+    "esp.1", "usa.1", "usa.nwsl", "eng.fa", "eng.league_cup", "ger.dfb_pokal", "wnba",
     "mens-college-basketball", "womens-college-basketball",
     "pwhl", "chl", "ohl", "whl", "qmjhl", "mens-college-hockey", "womens-college-hockey",
     "urc", "prem", "nrl", "afl", "pll",

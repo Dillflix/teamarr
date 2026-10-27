@@ -26,6 +26,8 @@ EXPANDED_LEAGUES = [
     ("usa.1", "soccer", "espn"),
     ("usa.nwsl", "soccer", "espn"),
     ("eng.fa", "soccer", "espn"),
+    ("eng.league_cup", "soccer", "espn"),
+    ("ger.dfb_pokal", "soccer", "espn"),
     ("wnba", "basketball", "espn"),
     ("mens-college-basketball", "basketball", "espn"),
     ("womens-college-basketball", "basketball", "espn"),
