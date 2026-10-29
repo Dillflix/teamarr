@@ -8,6 +8,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from pydantic import AwareDatetime, ValidationError
 
 from teamarr.api.dependencies import (
+    get_dazn_sports_schedule,
     get_dazn_tennis_schedule,
     get_sports_service,
     get_tsn_golf_schedule,
@@ -27,6 +28,7 @@ from teamarr.database.leagues import get_all_leagues
 from teamarr.database.settings import get_all_settings
 from teamarr.services.broadcast_sessions import load_broadcast_config
 from teamarr.services.controller_feed import ControllerFeedBuilder
+from teamarr.services.dazn_sports import DAZNSportsScheduleService
 from teamarr.services.dazn_tennis import DAZNTennisScheduleService
 from teamarr.services.feed_snapshots import FeedSnapshotStore, SnapshotExpired
 from teamarr.services.sports_data import SportsDataService
@@ -57,6 +59,7 @@ def get_feed(
     service: SportsDataService = Depends(get_sports_service),
     tsn: TSNGolfScheduleService = Depends(get_tsn_golf_schedule),
     tennis: DAZNTennisScheduleService = Depends(get_dazn_tennis_schedule),
+    dazn_sports: DAZNSportsScheduleService = Depends(get_dazn_sports_schedule),
     snapshots: FeedSnapshotStore = Depends(get_feed_snapshots),
 ) -> FeedResponse:
     """Overlapping games and broadcasts, sorted by UTC start then stable ID.
@@ -86,7 +89,7 @@ def get_feed(
             leagues=league if league is not None else list(DEFAULT_LEAGUES),
             sources=source
             if source is not None
-            else ["games", "nfl_redzone", "golf", "special_events", "dazn_tennis"],
+            else ["games", "nfl_redzone", "golf", "special_events", "dazn_tennis", "dazn_sports"],
             statuses=status or [],
             window_states=window_state or [],
             lookback_hours=lookback_hours,
@@ -114,6 +117,7 @@ def get_feed(
         default,
         settings.epg.art_base_url or "",
         get_tennis=tennis.get_sessions,
+        get_dazn_sports=dazn_sports.get_sessions,
     )
     try:
         items = builder.build(query)

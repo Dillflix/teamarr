@@ -8,6 +8,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import ValidationError
 
 from teamarr.api.dependencies import (
+    get_dazn_sports_schedule,
     get_dazn_tennis_schedule,
     get_sports_service,
     get_tsn_golf_schedule,
@@ -15,6 +16,7 @@ from teamarr.api.dependencies import (
 from teamarr.config import get_user_timezone
 from teamarr.core.broadcast import BroadcastSession
 from teamarr.services.broadcast_sessions import RedZoneSource, load_broadcast_config
+from teamarr.services.dazn_sports import DAZNSportsScheduleService
 from teamarr.services.dazn_tennis import DAZNTennisScheduleService
 from teamarr.services.special_coverage import SpecialCoverageSource
 from teamarr.services.sports_data import SportsDataService
@@ -29,10 +31,13 @@ def get_broadcast_sessions(
     target_date: date = Query(
         description="Session start date in its timezone (Eastern for RedZone)"
     ),
-    source: Literal["nfl_redzone", "golf", "special_events", "dazn_tennis"] = "nfl_redzone",
+    source: Literal[
+        "nfl_redzone", "golf", "special_events", "dazn_tennis", "dazn_sports"
+    ] = "nfl_redzone",
     service: SportsDataService = Depends(get_sports_service),
     tsn: TSNGolfScheduleService = Depends(get_tsn_golf_schedule),
     tennis: DAZNTennisScheduleService = Depends(get_dazn_tennis_schedule),
+    dazn_sports: DAZNSportsScheduleService = Depends(get_dazn_sports_schedule),
 ) -> list[BroadcastSession]:
     """Enumerate planning sessions; does not start or stop device playback."""
     try:
@@ -41,6 +46,15 @@ def get_broadcast_sessions(
         logger.error("[BROADCAST] Invalid broadcast configuration: %s", exc)
         raise HTTPException(status_code=503, detail="Invalid broadcast configuration") from exc
 
+    if source == "dazn_sports":
+        if not config.dazn_sports.enabled or not config.dazn_sports.competitions:
+            return []
+        try:
+            return [session for session in dazn_sports.get_sessions(target_date)
+                    if session.competition in config.dazn_sports.competitions]
+        except Exception as exc:
+            logger.warning("[DAZN_SPORTS] Schedule fetch failed: %s", type(exc).__name__)
+            raise HTTPException(503, "Unable to fetch DAZN sports schedule") from exc
     if source == "dazn_tennis":
         if not config.dazn_tennis.enabled:
             return []

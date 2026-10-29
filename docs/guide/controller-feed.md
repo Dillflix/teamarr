@@ -317,6 +317,10 @@ broadcasts can use league artwork; no fake teams are constructed.
 
 ## Extension boundary
 
+National Squash League and Beatdown MMA are available through the default
+`dazn_sports` broadcast source. See [DAZN squash and MMA](dazn-sports.md) for
+competition scope, configuration and upgrade order. No database migration is required.
+
 Continuous DAZN tennis coverage is now available through the `dazn_tennis`
 source, included in the default source set independently of game leagues.
 See [DAZN tennis coverage](tennis-coverage.md) for configuration, source fields,
