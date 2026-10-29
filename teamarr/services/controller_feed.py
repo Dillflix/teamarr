@@ -68,10 +68,12 @@ class ControllerFeedBuilder:
         default_duration: float,
         art_base_url: str = "",
         get_tennis: Callable[[date], list[BroadcastSession]] | None = None,
+        get_dazn_sports: Callable[[date], list[BroadcastSession]] | None = None,
     ):
         self.get_events = get_events
         self.get_golf = get_golf
         self.get_tennis = get_tennis
+        self.get_dazn_sports = get_dazn_sports
         self.config = config
         self.timezone = timezone
         self.leagues = leagues
@@ -221,9 +223,11 @@ class ControllerFeedBuilder:
             timing_basis=broadcast.timing_basis,
             # A scheduled TV window is not provider-confirmed live sporting action.
             status=cast(FeedStatus, broadcast.status)
-            if broadcast.source == "dazn_tennis" and broadcast.status in {"live", "scheduled"}
+            if broadcast.source in {"dazn_tennis", "dazn_sports"}
+            and broadcast.status in {"live", "scheduled"}
             else "unknown",
-            status_basis="provider" if broadcast.source == "dazn_tennis" else "unknown",
+            status_basis="provider"
+            if broadcast.source in {"dazn_tennis", "dazn_sports"} else "unknown",
             status_received_at=broadcast.status_received_at,
             broadcast=broadcast,
             viewing_options=[self._option(broadcast)],
@@ -285,6 +289,7 @@ class ControllerFeedBuilder:
             "nfl_redzone": dates_between(discovery_start, end, ZoneInfo("America/New_York")),
             "golf": dates_between(discovery_start, end, ZoneInfo("America/New_York")),
             "dazn_tennis": dates_between(discovery_start, end, UTC),
+            "dazn_sports": dates_between(discovery_start, end, UTC),
             "special_events": set(),
         }
         editions = {edition.id: edition for edition in self.config.special_events.editions}
@@ -382,11 +387,21 @@ class ControllerFeedBuilder:
                 items[item.id] = item
 
         broadcasts: dict[str, BroadcastSession] = {}
-        if "dazn_tennis" in query.sources and self.config.dazn_tennis.enabled:
-            if self.get_tennis is None:
-                raise ValueError("DAZN tennis schedule source is not configured")
-            for day in sorted(source_days["dazn_tennis"]):
-                for session in self.get_tennis(day):
+        for source, enabled, fetch in (
+            ("dazn_tennis", self.config.dazn_tennis.enabled, self.get_tennis),
+            ("dazn_sports", self.config.dazn_sports.enabled
+             and bool(self.config.dazn_sports.competitions), self.get_dazn_sports),
+        ):
+            if source not in query.sources or not enabled:
+                continue
+            if fetch is None:
+                raise ValueError(f"{source} schedule source is not configured")
+            for day in sorted(source_days[source]):
+                for session in fetch(day):
+                    if source == "dazn_sports" and (
+                        session.competition not in self.config.dazn_sports.competitions
+                    ):
+                        continue
                     previous = broadcasts.get(session.id)
                     # Overlapping EPG days can include the same event. Use the
                     # latest acquired record, never the order of date buckets.

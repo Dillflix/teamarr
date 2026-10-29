@@ -1,0 +1,60 @@
+{
+  "Id": "en-ca-2026-10-29",
+  "Date": "2026-10-29",
+  "Tiles": [
+    {
+      "Title": "Philadelphia Freedom vs. Seattle Freeze",
+      "EventId": "yqgc1ika5bq4150o9qh2h2bq4",
+      "AssetId": "748ho72zjohe1lhhpjmlkmec9",
+      "Type": "Live",
+      "DisplayType": "Live",
+      "VideoType": "Live",
+      "Start": "2026-10-29T22:00:00Z",
+      "End": "2026-10-30T01:00:00Z",
+      "Sport": {
+        "Id": "36pd90quj5alw8xrpbw5nqvl4",
+        "Title": "Squash",
+        "Images": [
+          {
+            "ImageMimeType": "jpg",
+            "ImageType": "image-background",
+            "Id": "b3c85c2d-c321-45db-ac3c-08d7f61ebaa8"
+          },
+          {
+            "ImageMimeType": "jpg",
+            "ImageType": "image-tile",
+            "Id": "b3c85c2d-c321-45db-ac3c-08d7f61ebaa8"
+          }
+        ]
+      },
+      "Competition": {
+        "Id": "vpfggrvk32lz1juwvto8z18vw",
+        "Title": "National Squash League",
+        "Images": [
+          {
+            "ImageMimeType": "jpg",
+            "ImageType": "image-background",
+            "Id": "da7f065e-d1fd-4691-ad55-58e7bc7f883b"
+          },
+          {
+            "ImageMimeType": "jpg",
+            "ImageType": "image-tile",
+            "Id": "e0c82c61-f8af-47ca-8937-55dec726ab09"
+          }
+        ]
+      },
+      "TournamentCalendar": {
+        "Id": "pg9tu9zz7bhl12dr1j1f8bhki",
+        "Title": "National Squash League"
+      },
+      "Contestants": [],
+      "IsLinear": false,
+      "IsGeoRestricted": false,
+      "Image": {
+        "ImageMimeType": "png",
+        "ImageType": "image-header",
+        "Id": "748ho72zjohe1lhhpjmlkmec9_image-header_pCa_1792404645000"
+      }
+    }
+  ]
+}

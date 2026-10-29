@@ -551,6 +551,7 @@ def api(monkeypatch):
     from fastapi.testclient import TestClient
 
     from teamarr.api.dependencies import (
+        get_dazn_sports_schedule,
         get_dazn_tennis_schedule,
         get_sports_service,
         get_tsn_golf_schedule,
@@ -567,6 +568,9 @@ def api(monkeypatch):
     tennis = Mock()
     tennis.get_sessions.return_value = []
     app.dependency_overrides[get_dazn_tennis_schedule] = lambda: tennis
+    sports = Mock()
+    sports.get_sessions.return_value = []
+    app.dependency_overrides[get_dazn_sports_schedule] = lambda: sports
     app.dependency_overrides[route.get_feed_snapshots] = lambda: snapshots
     snapshots = FeedSnapshotStore()
     monkeypatch.setattr(route, "get_db", lambda: nullcontext(None))
@@ -589,6 +593,29 @@ def api_params(**updates):
     )
     data.update(updates)
     return data
+
+
+def test_http_dazn_sports_feed_and_source_failure(api):
+    import json
+    from datetime import date
+    from pathlib import Path
+
+    from teamarr.api.dependencies import get_dazn_sports_schedule
+    from teamarr.services.dazn_sports import parse_dazn_sports
+
+    client, _, _ = api
+    body = json.loads((Path(__file__).parents[1]
+                       / "fixtures/dazn_sports/2026-10-30.json").read_text())
+    sports = client.app.dependency_overrides[get_dazn_sports_schedule]()
+    sports.get_sessions.return_value = parse_dazn_sports(
+        body, date(2026, 10, 30), dt("2026-10-29T22:30:00Z"))
+    params = api_params(source="dazn_sports", start="2026-10-30T00:00:00Z",
+                        end="2026-10-31T00:00:00Z", as_of="2026-10-29T22:30:00Z", limit=100)
+    response = client.get("/api/v1/events/feed", params=params)
+    assert response.status_code == 200, response.text
+    assert {item["competition"] for item in response.json()["items"]} == {"nsl", "beatdown"}
+    sports.get_sessions.side_effect = RuntimeError("offline")
+    assert client.get("/api/v1/events/feed", params=params).status_code == 503
 
 
 @pytest.mark.parametrize(

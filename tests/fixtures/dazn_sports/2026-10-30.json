@@ -1,0 +1,125 @@
+{
+  "Id": "en-ca-2026-10-30",
+  "Date": "2026-10-30",
+  "Tiles": [
+    {
+      "Title": "Beatdown 15: James vs. Stoddart",
+      "EventId": "1vot4cy3ukrao1s1yx437lkdk9",
+      "AssetId": "9kqoq9iqkheq2tdzx13804s0w",
+      "Type": "UpComing",
+      "DisplayType": "UpComing",
+      "VideoType": "Vod",
+      "Start": "2026-10-30T07:00:00Z",
+      "End": null,
+      "Sport": {
+        "Id": "53wethrd3bk01jif9w7xvong6",
+        "Title": "MMA",
+        "Images": [
+          {
+            "ImageMimeType": "jpg",
+            "ImageType": "image-background",
+            "Id": "46bdbb44-0e1b-4f3f-ba5a-48cbf9734625"
+          },
+          {
+            "ImageMimeType": "jpg",
+            "ImageType": "image-portrait",
+            "Id": "741c4347-3a70-4f7a-8053-2cfe13e0efe6"
+          },
+          {
+            "ImageMimeType": "jpg",
+            "ImageType": "image-tile",
+            "Id": "a8628a34-d093-469c-9725-59ebbd4e6b26"
+          }
+        ]
+      },
+      "Competition": {
+        "Id": "fzncxnbx6rxp1ix28rvs1t3lf",
+        "Title": "MMA Beatdown",
+        "Images": [
+          {
+            "ImageMimeType": "jpg",
+            "ImageType": "image-logo",
+            "Id": "471db3e9-7f7c-483c-8959-4328f10769a4"
+          }
+        ]
+      },
+      "TournamentCalendar": {
+        "Id": "ti7fgozufcvwzzewqenpz7g6",
+        "Title": "Beatdown"
+      },
+      "Contestants": [
+        {
+          "Id": "c78v3pexwikte769fm9dtjo6z",
+          "Title": "Jack James",
+          "Images": []
+        },
+        {
+          "Id": "wwa28g0a1e4011dw3puxalxxy",
+          "Title": "Alfred Stoddart",
+          "Images": []
+        }
+      ],
+      "IsLinear": false,
+      "IsGeoRestricted": false,
+      "Image": {
+        "ImageMimeType": "jpg",
+        "ImageType": "image-header",
+        "Id": "9kqoq9iqkheq2tdzx13804s0w_image-header_pCa_1792569279000"
+      }
+    },
+    {
+      "Title": "Philadelphia Lightning vs. Seattle Freeze",
+      "EventId": "1vwvhyu299t6h1rp1fh53ujwkj",
+      "AssetId": "1kf7d7bxyqbow12ea3rjsciv35",
+      "Type": "UpComing",
+      "DisplayType": "UpComing",
+      "VideoType": "Vod",
+      "Start": "2026-10-30T22:30:00Z",
+      "End": null,
+      "Sport": {
+        "Id": "36pd90quj5alw8xrpbw5nqvl4",
+        "Title": "Squash",
+        "Images": [
+          {
+            "ImageMimeType": "jpg",
+            "ImageType": "image-background",
+            "Id": "b3c85c2d-c321-45db-ac3c-08d7f61ebaa8"
+          },
+          {
+            "ImageMimeType": "jpg",
+            "ImageType": "image-tile",
+            "Id": "b3c85c2d-c321-45db-ac3c-08d7f61ebaa8"
+          }
+        ]
+      },
+      "Competition": {
+        "Id": "vpfggrvk32lz1juwvto8z18vw",
+        "Title": "National Squash League",
+        "Images": [
+          {
+            "ImageMimeType": "jpg",
+            "ImageType": "image-background",
+            "Id": "da7f065e-d1fd-4691-ad55-58e7bc7f883b"
+          },
+          {
+            "ImageMimeType": "jpg",
+            "ImageType": "image-tile",
+            "Id": "e0c82c61-f8af-47ca-8937-55dec726ab09"
+          }
+        ]
+      },
+      "TournamentCalendar": {
+        "Id": "pg9tu9zz7bhl12dr1j1f8bhki",
+        "Title": "National Squash League"
+      },
+      "Contestants": [],
+      "IsLinear": false,
+      "IsGeoRestricted": false,
+      "Image": {
+        "ImageMimeType": "png",
+        "ImageType": "image-header",
+        "Id": "1kf7d7bxyqbow12ea3rjsciv35_image-header_pCa_1792404764000"
+      }
+    }
+  ]
+}

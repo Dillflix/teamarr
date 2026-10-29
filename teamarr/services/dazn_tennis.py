@@ -50,7 +50,9 @@ def _time(value, field):
     return result.astimezone(UTC)
 
 
-def parse_dazn_tennis(body: dict, day: date, received_at: datetime) -> list[BroadcastSession]:
+def _parse_dazn_schedule(
+    body: dict, day: date, received_at: datetime, competitions=None,
+) -> list[BroadcastSession]:
     """Fail malformed source data; valid empty days are distinct from failures."""
     if (
         not isinstance(body, dict)
@@ -65,16 +67,30 @@ def parse_dazn_tennis(body: dict, day: date, received_at: datetime) -> list[Broa
         if not isinstance(tile, dict):
             raise ValueError("Invalid DAZN schedule tile")
         sport = tile.get("Sport") or {}
-        if not isinstance(sport, dict) or sport.get("Title") != "Tennis":
-            continue
-        # Named match streams and 24/7 linear channels are outside this source.
-        if tile.get("IsLinear") or tile.get("Contestants"):
+        if competitions is None:
+            if not isinstance(sport, dict) or sport.get("Title") != "Tennis":
+                continue
+            source, code, kind = "dazn_tennis", "tennis", "tournament_coverage"
+        else:
+            competition = tile.get("Competition") or {}
+            match = (
+                competitions.get(competition.get("Id")) if isinstance(competition, dict) else None
+            )
+            if not match or not isinstance(sport, dict) or sport.get("Title") != match[1]:
+                continue
+            code, _, kind = match
+            source = "dazn_sports"
+        # Tennis retains its continuous-coverage scope. Other supported sports
+        # may identify contestants, but linear channels are never event listings.
+        if tile.get("IsLinear") or (competitions is None and tile.get("Contestants")):
             continue
         presentation = tile.get("Type")
         if presentation not in {"Live", "UpComing"}:
             continue  # CatchUp/VOD is never turned into an ended/live session.
         title = _text(tile.get("Title"), "Title")
         if _EXCLUDED.search(title) or tile.get("IsGeoRestricted"):
+            continue
+        if competitions is not None and re.search(r"\b(weigh[- ]?in|face[- ]?off)\b", title, re.I):
             continue
         event_id = _id(tile.get("EventId"), "EventId")
         asset_id = _id(tile.get("AssetId"), "AssetId")
@@ -107,19 +123,19 @@ def parse_dazn_tennis(body: dict, day: date, received_at: datetime) -> list[Broa
         if presentation == tile.get("DisplayType") == tile.get("VideoType") == "Live":
             status = "live"
         session = BroadcastSession(
-            id=f"dazn_tennis:ca:{event_id}",
-            source="dazn_tennis",
+            id=f"{source}:ca:{event_id}",
+            source=source,
             title=title,
-            kind="tournament_coverage",
-            sport="tennis",
-            competition="tennis",
+            kind=kind,
+            sport=sport["Title"].lower(),
+            competition=code,
             session_date=start.date(),
             timezone="UTC",
             start_time=start,
             expected_end_time=end,
             timing_basis="listing",
             end_time_estimated=True,
-            coverage_type="tournament_coverage",
+            coverage_type=kind,
             playback_target="prime_video",
             channel="DAZN",
             listing_url="https://www.dazn.com/en-CA/schedule",
@@ -142,7 +158,13 @@ def parse_dazn_tennis(body: dict, day: date, received_at: datetime) -> list[Broa
     return list(sessions.values())
 
 
+def parse_dazn_tennis(body: dict, day: date, received_at: datetime) -> list[BroadcastSession]:
+    return _parse_dazn_schedule(body, day, received_at)
+
+
 class DAZNTennisScheduleService:
+    parse = staticmethod(parse_dazn_tennis)
+
     def __init__(self, fetch: Callable[[date], dict] | None = None, clock=None):
         self._fetch = fetch or self._download
         self._clock = clock or (lambda: datetime.now(UTC))
@@ -180,7 +202,7 @@ class DAZNTennisScheduleService:
             sessions = self._cache.get(day.isoformat())
             if sessions is None:
                 body = self._fetch(day)
-                sessions = parse_dazn_tennis(body, day, self._clock())
+                sessions = self.parse(body, day, self._clock())
                 self._cache.set(day.isoformat(), sessions)
             # Cached evidence keeps its acquisition time. Failures propagate;
             # the controller retains the last complete catalog and marks stale.
