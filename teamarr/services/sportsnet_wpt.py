@@ -77,7 +77,11 @@ def parse_sportsnet_wpt(body: list, day: date, received_at: datetime) -> list[Br
                 raise ValueError("Invalid Sportsnet airing metadata")
             if fields.get("CatalogType") != "airing" or fields.get("VideoWorkflow") != "LIVE":
                 continue
-            status = {"Live": "live", "Scheduled": "scheduled"}.get(fields.get("VideoStatus"))
+            video_status = fields.get("VideoStatus")
+            status = (
+                {"Live": "live", "Scheduled": "scheduled"}.get(video_status)
+                if isinstance(video_status, str) else None
+            )
             if status is None:
                 continue  # OnDemand is never a new live playback opportunity.
             airing_id = row.get("id")
