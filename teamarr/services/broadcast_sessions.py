@@ -19,6 +19,7 @@ from teamarr.services.dazn_sports import DAZNSportsConfig
 from teamarr.services.dazn_tennis import DAZNTennisConfig
 from teamarr.services.golf_sessions import GolfConfig
 from teamarr.services.special_events import SpecialEventsConfig
+from teamarr.services.sportsnet_wpt import SportsnetWPTConfig
 
 REDZONE_TIMEZONE = "America/New_York"
 
@@ -63,6 +64,7 @@ class BroadcastConfig(BaseModel):
     golf: GolfConfig = Field(default_factory=GolfConfig)
     dazn_tennis: DAZNTennisConfig = Field(default_factory=DAZNTennisConfig)
     dazn_sports: DAZNSportsConfig = Field(default_factory=DAZNSportsConfig)
+    sportsnet_wpt: SportsnetWPTConfig = Field(default_factory=SportsnetWPTConfig)
     special_events: SpecialEventsConfig = Field(default_factory=SpecialEventsConfig)
     controller: ControllerConfig = Field(default_factory=ControllerConfig)
 

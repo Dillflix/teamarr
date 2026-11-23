@@ -554,6 +554,7 @@ def api(monkeypatch):
         get_dazn_sports_schedule,
         get_dazn_tennis_schedule,
         get_sports_service,
+        get_sportsnet_wpt_schedule,
         get_tsn_golf_schedule,
     )
     from teamarr.api.routes import controller_feed as route
@@ -571,6 +572,9 @@ def api(monkeypatch):
     sports = Mock()
     sports.get_sessions.return_value = []
     app.dependency_overrides[get_dazn_sports_schedule] = lambda: sports
+    wpt = Mock()
+    wpt.get_sessions.return_value = []
+    app.dependency_overrides[get_sportsnet_wpt_schedule] = lambda: wpt
     app.dependency_overrides[route.get_feed_snapshots] = lambda: snapshots
     snapshots = FeedSnapshotStore()
     monkeypatch.setattr(route, "get_db", lambda: nullcontext(None))
@@ -593,6 +597,31 @@ def api_params(**updates):
     )
     data.update(updates)
     return data
+
+
+def test_http_wpt_feed_and_source_failure(api):
+    import json
+    from datetime import date
+    from pathlib import Path
+
+    from teamarr.api.dependencies import get_sportsnet_wpt_schedule
+    from teamarr.services.sportsnet_wpt import parse_sportsnet_wpt
+
+    client, _, _ = api
+    body = json.loads((Path(__file__).parents[1]
+                       / "fixtures/sportsnet_wpt/2026-11-23.json").read_text())
+    source = client.app.dependency_overrides[get_sportsnet_wpt_schedule]()
+    source.get_sessions.return_value = parse_sportsnet_wpt(
+        body, date(2026, 11, 23), dt("2026-11-23T20:30:00Z"))
+    params = api_params(source="sportsnet_wpt", start="2026-11-23T00:00:00Z",
+                        end="2026-11-24T00:00:00Z", as_of="2026-11-23T20:30:00Z", limit=100)
+    params.pop("league")
+    response = client.get("/api/v1/events/feed", params=params)
+    assert response.status_code == 200, response.text
+    assert len(response.json()["items"]) == 2
+    assert {item["competition"] for item in response.json()["items"]} == {"wpt"}
+    source.get_sessions.side_effect = RuntimeError("offline")
+    assert client.get("/api/v1/events/feed", params=params).status_code == 503
 
 
 def test_http_dazn_sports_feed_and_source_failure(api):

@@ -11,6 +11,7 @@ from teamarr.api.dependencies import (
     get_dazn_sports_schedule,
     get_dazn_tennis_schedule,
     get_sports_service,
+    get_sportsnet_wpt_schedule,
     get_tsn_golf_schedule,
 )
 from teamarr.config import get_user_timezone
@@ -20,6 +21,7 @@ from teamarr.services.dazn_sports import DAZNSportsScheduleService
 from teamarr.services.dazn_tennis import DAZNTennisScheduleService
 from teamarr.services.special_coverage import SpecialCoverageSource
 from teamarr.services.sports_data import SportsDataService
+from teamarr.services.sportsnet_wpt import SportsnetWPTScheduleService
 from teamarr.services.tsn_golf import TSNGolfScheduleService, get_golf_sessions
 
 logger = logging.getLogger(__name__)
@@ -32,12 +34,13 @@ def get_broadcast_sessions(
         description="Session start date in its timezone (Eastern for RedZone)"
     ),
     source: Literal[
-        "nfl_redzone", "golf", "special_events", "dazn_tennis", "dazn_sports"
+        "nfl_redzone", "golf", "special_events", "dazn_tennis", "dazn_sports", "sportsnet_wpt"
     ] = "nfl_redzone",
     service: SportsDataService = Depends(get_sports_service),
     tsn: TSNGolfScheduleService = Depends(get_tsn_golf_schedule),
     tennis: DAZNTennisScheduleService = Depends(get_dazn_tennis_schedule),
     dazn_sports: DAZNSportsScheduleService = Depends(get_dazn_sports_schedule),
+    sportsnet_wpt: SportsnetWPTScheduleService = Depends(get_sportsnet_wpt_schedule),
 ) -> list[BroadcastSession]:
     """Enumerate planning sessions; does not start or stop device playback."""
     try:
@@ -46,6 +49,14 @@ def get_broadcast_sessions(
         logger.error("[BROADCAST] Invalid broadcast configuration: %s", exc)
         raise HTTPException(status_code=503, detail="Invalid broadcast configuration") from exc
 
+    if source == "sportsnet_wpt":
+        if not config.sportsnet_wpt.enabled:
+            return []
+        try:
+            return sportsnet_wpt.get_sessions(target_date)
+        except Exception as exc:
+            logger.warning("[SPORTSNET_WPT] Schedule fetch failed: %s", type(exc).__name__)
+            raise HTTPException(503, "Unable to fetch Sportsnet WPT schedule") from exc
     if source == "dazn_sports":
         if not config.dazn_sports.enabled or not config.dazn_sports.competitions:
             return []

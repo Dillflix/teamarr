@@ -6,7 +6,13 @@ from teamarr.services import SportsDataService, create_default_service
 from teamarr.services.dazn_sports import DAZNSportsScheduleService
 from teamarr.services.dazn_tennis import DAZNTennisScheduleService
 from teamarr.services.golf import GolfCatalogService
+from teamarr.services.sportsnet_wpt import SportsnetWPTScheduleService
 from teamarr.services.tsn_golf import TSNGolfScheduleService
+
+
+@lru_cache
+def get_sportsnet_wpt_schedule() -> SportsnetWPTScheduleService:
+    return SportsnetWPTScheduleService()
 
 
 @lru_cache

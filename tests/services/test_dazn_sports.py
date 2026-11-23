@@ -65,6 +65,7 @@ def build(config=None, fetch=None):
     return ControllerFeedBuilder(
         lambda league, day: [], lambda day: [], config or BroadcastConfig(), UTC,
         {}, {}, 3, get_tennis=lambda day: [], get_dazn_sports=fetch,
+        get_sportsnet_wpt=lambda day: [],
     )
 
 

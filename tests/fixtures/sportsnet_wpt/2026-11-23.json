@@ -1,0 +1,41 @@
+[
+  {
+    "channelId": "155048",
+    "startDate": "2026-11-23T00:00:00.000Z",
+    "endDate": "2026-11-24T00:00:00.000Z",
+    "schedules": [
+      {
+        "channelId": "155048",
+        "customFields": {
+          "VideoWorkflow": "LIVE",
+          "VideoStatus": "Live",
+          "CatalogType": "airing"
+        },
+        "endDate": "2026-11-23T21:00:00Z",
+        "id": "144e5680-d578-4963-8629-714d8fe6f025",
+        "startDate": "2026-11-23T20:00:00Z",
+        "item": {
+          "id": "1a2f82ab-a206-4972-b930-b9a1ec2225b9",
+          "type": "program",
+          "title": "World Poker Tour"
+        }
+      },
+      {
+        "channelId": "155048",
+        "customFields": {
+          "VideoWorkflow": "LIVE",
+          "VideoStatus": "Scheduled",
+          "CatalogType": "airing"
+        },
+        "endDate": "2026-11-23T22:00:00Z",
+        "id": "23c53176-eea1-4be3-8904-9420bf635c3b",
+        "startDate": "2026-11-23T21:00:00Z",
+        "item": {
+          "id": "f5229f47-4c66-44cc-8ef5-567fbfa36c7f",
+          "type": "program",
+          "title": "World Poker Tour"
+        }
+      }
+    ]
+  }
+]

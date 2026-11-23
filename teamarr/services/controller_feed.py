@@ -69,11 +69,13 @@ class ControllerFeedBuilder:
         art_base_url: str = "",
         get_tennis: Callable[[date], list[BroadcastSession]] | None = None,
         get_dazn_sports: Callable[[date], list[BroadcastSession]] | None = None,
+        get_sportsnet_wpt: Callable[[date], list[BroadcastSession]] | None = None,
     ):
         self.get_events = get_events
         self.get_golf = get_golf
         self.get_tennis = get_tennis
         self.get_dazn_sports = get_dazn_sports
+        self.get_sportsnet_wpt = get_sportsnet_wpt
         self.config = config
         self.timezone = timezone
         self.leagues = leagues
@@ -221,13 +223,13 @@ class ControllerFeedBuilder:
             else None,
             end_time_estimated=broadcast.end_time_estimated,
             timing_basis=broadcast.timing_basis,
-            # A scheduled TV window is not provider-confirmed live sporting action.
+            # Provider live state describes the broadcast, including linear TV airings.
             status=cast(FeedStatus, broadcast.status)
-            if broadcast.source in {"dazn_tennis", "dazn_sports"}
+            if broadcast.source in {"dazn_tennis", "dazn_sports", "sportsnet_wpt"}
             and broadcast.status in {"live", "scheduled"}
             else "unknown",
             status_basis="provider"
-            if broadcast.source in {"dazn_tennis", "dazn_sports"} else "unknown",
+            if broadcast.source in {"dazn_tennis", "dazn_sports", "sportsnet_wpt"} else "unknown",
             status_received_at=broadcast.status_received_at,
             broadcast=broadcast,
             viewing_options=[self._option(broadcast)],
@@ -290,6 +292,7 @@ class ControllerFeedBuilder:
             "golf": dates_between(discovery_start, end, ZoneInfo("America/New_York")),
             "dazn_tennis": dates_between(discovery_start, end, UTC),
             "dazn_sports": dates_between(discovery_start, end, UTC),
+            "sportsnet_wpt": dates_between(discovery_start, end, UTC),
             "special_events": set(),
         }
         editions = {edition.id: edition for edition in self.config.special_events.editions}
@@ -388,6 +391,7 @@ class ControllerFeedBuilder:
 
         broadcasts: dict[str, BroadcastSession] = {}
         for source, enabled, fetch in (
+            ("sportsnet_wpt", self.config.sportsnet_wpt.enabled, self.get_sportsnet_wpt),
             ("dazn_tennis", self.config.dazn_tennis.enabled, self.get_tennis),
             ("dazn_sports", self.config.dazn_sports.enabled
              and bool(self.config.dazn_sports.competitions), self.get_dazn_sports),
